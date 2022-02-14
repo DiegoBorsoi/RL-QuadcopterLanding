@@ -142,43 +142,9 @@ class WorkerBase(Node):
     def episodes_number(self):
         return self._wp.n_episodes
 
-    def step(self, collect: bool = True) -> Tuple[int, float]:
+    def step(self, collect: bool = True, testing: bool = False) -> Tuple[int, float]:
         """Generate experiences using the mean-field model for a policy."""
         
-        #self._policy.act(state, epsilon)
-        '''
-        total_reward = 0
-        
-        old_state = np.random.rand(self._wp.n_states)
-        
-        for i in range(1, self._wp.n_iterations + 1):
-            new_exp = Experience(self._wp.n_states)
-            
-            next_state = np.random.rand(self._wp.n_states)
-            new_exp.new_experience(
-                i,
-                old_state,
-                np.random.randint(0, self._wp.n_actions, 1).item(),
-                np.random.rand(1).item(),
-                next_state,
-                np.random.rand(1).item(),
-                i % (self._wp.n_iterations // 20) == 0
-            )
-            old_state = next_state
-            total_reward = total_reward + new_exp.reward
-            
-            if collect:
-                self._db.save_experience(new_exp, new_exp.done == 1)
-        
-        return (self._wp.n_iterations, total_reward)
-        '''
-
-        '''
-        success = self._spawn_entity(initial_pose)
-        if not success:
-            self.get_logger().error('Spawn service failed. Exiting.')
-            return (0, 0)
-        '''
         # Create a subscriber
         # This node subscribes to messages of type
         # nav_msgs/Odometry (i.e. position and orientation of the robot)
@@ -269,6 +235,9 @@ class WorkerBase(Node):
                 self.reset_world()
                 self.reset_sim()
 
+                if testing:
+                    return (run_steps, total_reward)
+
         if not (self.done or self.reset):
             self.pause_physics()
             self.delete_entity()
@@ -276,7 +245,7 @@ class WorkerBase(Node):
             self.reset_world()
             self.reset_sim()
 
-        return (self._wp.n_iterations, total_reward)
+        return (run_steps, total_reward)
 
     # ---------------------------------------------------------------------------------------------
     # --- RL Functions ----------------------------------------------------------------------------

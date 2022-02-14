@@ -36,7 +36,7 @@ class Worker(WorkerBase):
 
         # Create ROS publisher for episodes data.
         self._pub = self.create_publisher(
-            Float32, 'total_reward', 10, callback_group=self._cb_group)
+            Float32, 'episode_data', 10, callback_group=self._cb_group)
 
     def collect(self) -> int:
         """Collect a set of trajectories and store."""
@@ -89,7 +89,7 @@ class Worker(WorkerBase):
         steps: np.ndarray = np.zeros(n_test_runs)
         rewards: np.ndarray = np.zeros(n_test_runs)
         for t in range(n_test_runs):
-            steps[t], rewards[t] = self.step(collect=False)
+            steps[t], rewards[t] = self.step(collect=False, testing=True)
 
         self.get_logger().warn('---------- TEST RUN RESULTS ----------')
         self.get_logger().warn(f'Average: {steps.mean()}')

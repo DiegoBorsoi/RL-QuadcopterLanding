@@ -238,8 +238,8 @@ class WorkerPPO():
 
     def load_model(self, path_to_model: str) -> None:
         """Load model for inference or training use."""
-        self._neural_net = keras.models.load_model(path_to_model + '_actor')
-        self._critic_net = keras.models.load_model(path_to_model + '_critic')
+        self._neural_net = keras.models.load_model(path_to_model + 'trained_model_actor')
+        self._critic_net = keras.models.load_model(path_to_model + 'trained_model_critic')
 
     def save_model(self, path_to_model: str) -> None:
         """Load model for inference or training use."""
@@ -248,8 +248,8 @@ class WorkerPPO():
         
         # self._neural_net.predict(np.arange(self._n_states).reshape(1, self._n_states))
         #self._neural_net.predict(np.array([[0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.92, 0.0]]))
-        self._neural_net.save(path_to_model + '_actor')
+        self._neural_net.save(path_to_model + 'trained_model_actor')
 
         # self._critic_net.predict(np.arange(self._n_states).reshape(1, self._n_states))
         #self._critic_net.predict(np.array([[0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.92, 0.0]]))
-        self._critic_net.save(path_to_model + '_critic')
+        self._critic_net.save(path_to_model + 'trained_model_critic')

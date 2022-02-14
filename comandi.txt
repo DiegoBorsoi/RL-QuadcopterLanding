@@ -1,0 +1,8 @@
+roba:
+- usare episodi come run complete e non insieme di run, cioè step termina se si esce da un bound o done == True
+  serve principalmente per il test, perché avrebbe senso il test fosse su una sola run alla volta
+
+comandi:
+colcon build --symlink-install
+. ./install/setup.bash
+ros2 launch drone_worker drone_worker.launch.py 'policy_type:=PPO' 'open_gui:=False'

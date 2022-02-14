@@ -6,7 +6,7 @@ dw:
                 states: 12
                 actions: 6
                 iterations: 200 #4000
-                episodes: 1 #5000
+                episodes: 2 #5000
             hyperparameter:
                 alpha: 0.007
                 beta: 0.1

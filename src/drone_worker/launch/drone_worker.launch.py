@@ -45,9 +45,9 @@ def generate_launch_description():
             description='The Worker node namespace.'
         ),
         DeclareLaunchArgument(
-            'output_file',
-            default_value=['SavedModels/trained_model'],
-            description='Name of output file for neural network model'
+            'output_folder',
+            default_value=['Saves/'],
+            description='Name of output folder for model or other values to be saved'
         ),
         DeclareLaunchArgument(
             'policy_type',
@@ -67,8 +67,18 @@ def generate_launch_description():
             output='screen',
             parameters=[LaunchConfiguration('yaml_file')],
             arguments=[
-                LaunchConfiguration('output_file'),
+                LaunchConfiguration('output_folder'),
                 LaunchConfiguration('policy_type'),
+            ]
+        ),
+        Node(
+            package='drone_worker',
+            executable='data_saver',
+            name='saver',
+            namespace=LaunchConfiguration('worker_ns'),
+            output='screen',
+            arguments=[
+                LaunchConfiguration('output_folder'),
             ]
         ),
         ExecuteProcess(
