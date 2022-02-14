@@ -1,0 +1,18 @@
+dw:
+    worker_node:
+        ros__parameters:
+            use_gpu: False
+            number:
+                states: 12
+                actions: 6
+                iterations: 200 #4000
+                episodes: 1 #5000
+            hyperparameter:
+                alpha: 0.007
+                beta: 0.1
+                gamma: 0.99
+                epsilon: 1.0
+            database:
+                local_size: 10000
+            decay_rate: 10
+            training_delay: 0

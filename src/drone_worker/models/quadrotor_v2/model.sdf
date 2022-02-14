@@ -1,0 +1,86 @@
+<?xml version='1.0'?>
+<sdf version='1.7'>
+  <model name='quadrotor_v2'>
+    <link name='link'>
+      <pose>0 0 0.182466 0 0 0</pose>
+      <inertial>
+        <mass>1.316</mass>
+        <inertia>
+          <ixx>0.0128</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0128</iyy>
+          <iyz>0</iyz>
+          <izz>0.0218</izz>
+        </inertia>
+        <pose>0 0 0 0 -0 0</pose>
+      </inertial>
+      <visual name='visual'>
+        <geometry>
+          <mesh>
+            <uri>model://quadrotor_v2/quadrotor_base.dae</uri>
+          </mesh>
+        </geometry>
+        <pose>0 0 0 0 0 -0.785398</pose>
+      </visual>
+      <collision name='collision'>
+        <pose>0 0 0 0 0 -0.785398</pose>
+        <geometry>
+          <mesh>
+            <uri>model://quadrotor_v2/quadrotor_base.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </collision>
+
+      <!-- Describes the type and properties of the sensor -->
+      <sensor name="laser" type="ray">
+        <always_on>1</always_on>
+        <update_rate>10</update_rate>
+        <visualize>true</visualize>
+        <pose>0 0 -0.1 0 1.570796 0</pose>
+
+        <plugin name='laser' filename='liblaser_scan_plugin.so'>
+          <ros>
+            <namespace>/demo</namespace>
+            <remapping>~/out:=laser</remapping>
+          </ros>
+        </plugin>
+        
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>3</samples>
+              <resolution>1</resolution>
+              <min_angle>-0.261799</min_angle>
+              <max_angle>0.261799</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>3</samples>
+              <resolution>1</resolution>
+              <min_angle>-0.261799</min_angle>
+              <max_angle>0.261799</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.01</min>
+            <max>10</max>
+            <resolution>0.01</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </ray>
+      </sensor>
+
+    </link>
+    <static>0</static>
+
+    <plugin name="drone_plugin" filename="libdrone_plugin.so">
+      <publish_odom_tf>false</publish_odom_tf>
+    </plugin>
+
+  </model>
+</sdf>
