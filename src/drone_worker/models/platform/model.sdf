@@ -101,5 +101,8 @@
     </link>
     <static>1</static>
     <allow_auto_disable>1</allow_auto_disable>
+
+    <plugin name="platform_plugin" filename="libplatform_plugin.so">
+    </plugin>
   </model>
 </sdf>

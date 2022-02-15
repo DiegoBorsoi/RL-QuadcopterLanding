@@ -52,6 +52,17 @@ ament_target_dependencies(laser_scan_plugin
 )
 ament_export_libraries(laser_scan_plugin)
 
+add_library(platform_plugin SHARED
+  src/platform_plugin.cc
+)
+ament_target_dependencies(platform_plugin
+  "gazebo_dev"
+  "gazebo_ros"
+  "nav_msgs"
+  "rclcpp"
+)
+ament_export_libraries(platform_plugin)
+
 
 
 ament_export_dependencies(rclcpp)
