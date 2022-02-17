@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.7'>
-  <model name='platform'>
+  <model name='platform_v2'>
     <link name='link_0'>
       <inertial>
         <mass>3.12</mass>
@@ -101,5 +101,8 @@
     </link>
     <static>1</static>
     <allow_auto_disable>1</allow_auto_disable>
+
+    <plugin name="platform_plugin" filename="libplatform_plugin.so">
+    </plugin>
   </model>
 </sdf>

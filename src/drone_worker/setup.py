@@ -14,6 +14,7 @@ setup(
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
         (os.path.join('share', package_name, 'models/quadrotor_v2'), glob('models/quadrotor_v2/*')),
         (os.path.join('share', package_name, 'models/platform'), glob('models/platform/*')),
+        (os.path.join('share', package_name, 'models/platform_v2'), glob('models/platform_v2/*')),
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
         (os.path.join('share', package_name, 'worlds'), glob('worlds/*')),
     ],

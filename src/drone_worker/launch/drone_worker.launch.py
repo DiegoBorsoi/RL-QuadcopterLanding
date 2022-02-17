@@ -10,6 +10,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import ExecuteProcess
 from launch.conditions import IfCondition
+from launch.conditions import UnlessCondition
 from launch.substitutions import LaunchConfiguration
 
 
@@ -31,6 +32,9 @@ def generate_launch_description():
 
     world_file_name = 'quadcopter.world'
     world = os.path.join(pkg_dir, 'worlds', world_file_name)
+
+    world_file_name2 = 'quadcopter2.world'
+    world2 = os.path.join(pkg_dir, 'worlds', world_file_name2)
 
     """Launch file for training."""
     return LaunchDescription([
@@ -59,6 +63,11 @@ def generate_launch_description():
             default_value=['True'],
             description='Condition to check for having the gui.'
         ),
+        DeclareLaunchArgument(
+            'moving_platform',
+            default_value=['False'],
+            description='Condition to check for having the moving platform (default stationary).'
+        ),
         Node(
             package='drone_worker',
             executable='train_drone',
@@ -86,7 +95,16 @@ def generate_launch_description():
                                                 '-s', 'libgazebo_ros_factory.so',
                                                 #'-s', 'libgazebo_ros_force_system.so',
                                                 '--pause'],
-            output='screen'
+            output='screen',
+            condition=UnlessCondition(LaunchConfiguration('moving_platform'))
+        ),
+        ExecuteProcess(
+            cmd=['gzserver', '--verbose', world2,'-s', 'libgazebo_ros_init.so',
+                                                '-s', 'libgazebo_ros_factory.so',
+                                                #'-s', 'libgazebo_ros_force_system.so',
+                                                '--pause'],
+            output='screen',
+            condition=IfCondition(LaunchConfiguration('moving_platform'))
         ),
         ExecuteProcess(
             cmd=['gzclient', '--verbose'],
