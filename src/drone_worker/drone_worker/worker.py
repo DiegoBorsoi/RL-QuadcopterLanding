@@ -105,7 +105,7 @@ class Worker(WorkerBase):
 
     def upkeep(self) -> None:
         """Run policy dependent end-of-experiment upkeep on database, etc."""
-        if self.atype in ['REINFORCE', 'A2C']:
+        if self.atype in ['REINFORCE', 'A2C', 'PPO']:
             self._db.reset()
 
     def save_model(self) -> None:

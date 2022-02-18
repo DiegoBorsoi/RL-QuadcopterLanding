@@ -84,7 +84,7 @@ class WorkerPPO():
         action_logits = self._neural_net(batch[STATE])
         action_probs = tf.nn.softmax(action_logits)
 
-        for _ in range(1): # problem
+        for _ in range(10):
             c_loss = self.train_critic(returns, batch, batch_size)
             self.train_actor(returns, values_pred, action_probs, c_loss, batch, batch_size)
             self.optimize
