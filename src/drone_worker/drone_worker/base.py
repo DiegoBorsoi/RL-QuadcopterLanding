@@ -66,7 +66,7 @@ class WorkerBase(Node):
                 ('training_delay', 100),
                 ('decay_rate', 500),
                 ('batch_size', 16),
-                ('hidden_layers', [16, 16]),
+                ('hidden_layers', [64, 64]),
             ]
         )
         self._wp = WorkerParameters(
@@ -211,7 +211,7 @@ class WorkerBase(Node):
                     action,
                     self.done)
                 self._db.save_experience(new_exp, self.done)
-            self.get_logger().info("Iter: %s, reward: %s" % (i, reward))
+            #self.get_logger().info("Iter: %s, reward: %s" % (i, reward))
 
             # Each run can last at max run_max_steps iterations
             if run_steps >= run_max_steps:
@@ -224,7 +224,7 @@ class WorkerBase(Node):
                 old_state = state
                 old_action = action
 
-                #self.execute_action(self.translate_action(action))
+                self.execute_action(self.translate_action(action))
             else:
                 # if done reset world and model
                 self.pause_physics()

@@ -266,7 +266,7 @@ namespace gazebo_plugins
 
     impl_->horizontal_vel_ = 0.1f;
 
-    impl_->vertical_vel_ = 0.001f;
+    impl_->vertical_vel_ = 0.005f;
 
 
     // Listen to the update event (broadcast every simulation iteration)
@@ -364,7 +364,7 @@ namespace gazebo_plugins
         z_lin_vel_ -= vertical_vel_;
       }
 
-      if (static_cast<float>(pose.Pos().Z()) < 0.51f){
+      if (static_cast<float>(pose.Pos().Z()) < 0.1f){
         z_lin_vel_ = 0;
       }
       

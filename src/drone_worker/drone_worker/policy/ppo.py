@@ -31,8 +31,7 @@ class WorkerPPO():
             gamma: float,
             hidden_layer_sizes: List[int],
             use_gpu: bool = False) -> None:
-        """Initialize the ModelActorCritic class."""
-        #super().__init__(n_states, n_actions, alpha, gamma, hidden_layer_sizes, use_gpu)
+        """Initialize the PPO class."""
         self._n_states = n_states
         self._n_actions = n_actions
         self._alpha: float = alpha

@@ -121,10 +121,13 @@ def main():
     node = Worker('worker_node', output_file, policy_type)
 
     try:
-        for _ in range(node.episodes_number()):
+        for i in range(node.episodes_number()):
             steps = node.collect()
             node.compute(steps)
             node.upkeep()
+
+            if (i % 10 == 0):
+                node.save_model()
 
         node.save_model()
 
