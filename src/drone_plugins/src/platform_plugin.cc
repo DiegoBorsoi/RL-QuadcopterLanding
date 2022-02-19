@@ -294,7 +294,7 @@ namespace gazebo_plugins
 
         target_roll = fdistr(gen);
         target_pitch = fdistr(gen);
-        std::cout << target_roll << " - " << target_pitch << std::endl;
+        //std::cout << target_roll << " - " << target_pitch << std::endl;
 
         reached_target_roll = false;
         reached_target_pitch = false;

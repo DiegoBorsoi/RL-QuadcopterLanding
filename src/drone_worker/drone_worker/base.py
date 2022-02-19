@@ -471,7 +471,7 @@ class WorkerBase(Node):
             srv_call = client.call_async(req)
             while rclpy.ok():
                 if srv_call.done():
-                    self.get_logger().info('Spawn status: %s' % srv_call.result().status_message)
+                    self.get_logger().info('Spawn status: Successfull')
                     break
                 rclpy.spin_once(self)
             return srv_call.result().success
@@ -487,7 +487,7 @@ class WorkerBase(Node):
             srv_call = client.call_async(req)
             while rclpy.ok():
                 if srv_call.done():
-                    self.get_logger().info('Spawn status: %s' % srv_call.result().status_message)
+                    self.get_logger().info('Spawn status: Successfull')
                     break
                 rclpy.spin_once(self)
             return srv_call.result().success
