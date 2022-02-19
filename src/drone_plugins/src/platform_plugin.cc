@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <string>
+#include <random>
 
 namespace gazebo_plugins
 {
@@ -103,6 +104,29 @@ namespace gazebo_plugins
 
     /// True to publish odom-to-world transforms.
     //bool publish_odom_tf_;
+
+    // target roll and pitch
+    float target_roll;
+    float target_pitch;
+
+    // rotation limit and increase/decrease step
+    float max_rot;
+    float rot_steps;
+
+    // ccondition if we reached the target rotation
+    bool reached_target_roll;
+    bool reached_target_pitch;
+
+    // margin to keep the rotation stable on target
+    float rot_zero_margin;
+
+    float initial_x;
+    float initial_y;
+    float initial_z;
+
+    float pos_margin;
+
+    float lin_vel;
   };
 
   class PlatformPlugin : public gazebo::ModelPlugin
@@ -208,6 +232,26 @@ namespace gazebo_plugins
     impl_->odom_.header.frame_id = impl_->odometry_frame_;
     //impl_->odom_.child_frame_id = impl_->robot_base_frame_;
 
+    impl_->target_roll = 0;
+    impl_->target_pitch = 0;
+
+    impl_->max_rot = (M_PI / 12);
+    impl_->rot_steps = 500.0f;
+
+    impl_->rot_zero_margin = impl_->max_rot / (impl_->rot_steps / 2);
+
+    impl_->reached_target_roll = true;
+    impl_->reached_target_pitch = true;
+
+    ignition::math::Pose3d pose = impl_->model_->WorldPose();
+    impl_->initial_x = static_cast<float>(pose.Pos().X());
+    impl_->initial_y = static_cast<float>(pose.Pos().Y());
+    impl_->initial_z = static_cast<float>(pose.Pos().Z());
+
+    impl_->pos_margin = 0.005f;
+
+    impl_->lin_vel = 0.01f;
+
 
     // Listen to the update event (broadcast every simulation iteration)
     impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
@@ -225,9 +269,115 @@ namespace gazebo_plugins
 
     if (seconds_since_last_update >= update_period_) {
       ignition::math::Pose3d pose = model_->WorldPose();
-      
-      
 
+      float current_roll = static_cast<float>(pose.Rot().Roll()); // on increase go down on y+
+      float current_pitch = static_cast<float>(pose.Rot().Pitch());
+      //std::cout << "roll - pitch : " << current_roll << " - " << current_pitch << std::endl;
+
+      //std::cout << "roll: " << target_roll << " - " << current_roll << std::endl;
+      //std::cout << "pitch: " << target_pitch << " - " << current_pitch << std::endl;
+      if(current_roll < (target_roll + rot_zero_margin) && current_roll > (target_roll - rot_zero_margin)){
+        reached_target_roll = true;
+      }
+      if(current_pitch < (target_pitch + rot_zero_margin) && current_pitch > (target_pitch - rot_zero_margin)){
+        reached_target_pitch = true;
+      }
+      
+      float x_ang_vel = 0;
+      float y_ang_vel = 0;
+      // calculate new random rotation if we reach the previous one
+      if(reached_target_roll && reached_target_pitch){
+        // generate new target rotations
+        std::random_device rd; // obtain a random number from hardware
+        std::mt19937 gen(rd()); // seed the generator
+        std::uniform_real_distribution<float> fdistr(- max_rot, max_rot);
+
+        target_roll = fdistr(gen);
+        target_pitch = fdistr(gen);
+        std::cout << target_roll << " - " << target_pitch << std::endl;
+
+        reached_target_roll = false;
+        reached_target_pitch = false;
+      }else{
+        // take a step to reach the target rotation
+        if(! reached_target_roll){
+          if(current_roll > target_roll){
+            x_ang_vel = - abs(target_roll / rot_steps);
+          }else if(current_roll < target_roll){
+            x_ang_vel = abs(target_roll / rot_steps);
+          }
+        }
+
+        if(! reached_target_pitch){
+          if(current_pitch > target_pitch){
+            y_ang_vel = - abs(target_pitch / rot_steps);
+          }else if(current_pitch < target_pitch){
+            y_ang_vel = abs(target_pitch / rot_steps);
+          }
+        }
+      }
+
+      
+      float z_ang_vel = 0;
+      float current_yaw = static_cast<float>(pose.Rot().Yaw());
+      if (current_yaw > rot_zero_margin){
+        z_ang_vel = - 0.001f;
+      }
+      else if (current_yaw < - rot_zero_margin){
+        z_ang_vel = 0.001f;
+      }
+      
+      model_->SetAngularVel(
+        ignition::math::Vector3d(
+          x_ang_vel, 
+          y_ang_vel, 
+          z_ang_vel));
+
+
+      // keep the model in the initial position
+      float x_lin_vel = 0;
+      float current_x = static_cast<float>(pose.Pos().X());
+      if (current_x > initial_x + pos_margin){
+        x_lin_vel = - lin_vel;
+      }
+      else if (current_x < initial_x - pos_margin){
+        x_lin_vel = lin_vel;
+      }
+
+      float y_lin_vel = 0;
+      float current_y = static_cast<float>(pose.Pos().Y());
+      if (current_y > initial_y + pos_margin){
+        y_lin_vel = - lin_vel;
+      }
+      else if (current_y < initial_y - pos_margin){
+        y_lin_vel = lin_vel;
+      }
+
+      float z_lin_vel = 0;
+      float current_z = static_cast<float>(pose.Pos().Z());
+      if (current_z > initial_z + pos_margin){
+        z_lin_vel = - lin_vel;
+      }
+      else if (current_z < initial_z - pos_margin){
+        z_lin_vel = lin_vel;
+      }
+
+      model_->SetLinearVel(
+        ignition::math::Vector3d(
+          x_lin_vel, 
+          y_lin_vel, 
+          z_lin_vel));
+      
+      /*
+      pose.Set(
+          0,//pose.Pos().X(), 
+          0,//pose.Pos().Y(), 
+          0,//pose.Pos().Z(),
+          current_roll + x_ang_vel,
+          current_pitch + y_ang_vel,
+          0);
+      model_->SetRelativePose(pose);
+      */
       last_update_time_ = _info.simTime;
     }
 

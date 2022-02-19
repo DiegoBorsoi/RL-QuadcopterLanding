@@ -50,7 +50,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'output_folder',
-            default_value=['Saves/'],
+            default_value=['saves/'],
             description='Name of output folder for model or other values to be saved'
         ),
         DeclareLaunchArgument(

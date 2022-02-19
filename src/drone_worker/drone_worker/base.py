@@ -60,7 +60,6 @@ class WorkerBase(Node):
                 ('number.iterations', 1000),
                 ('number.episodes', 5000),
                 ('hyperparameter.alpha', 0.007),
-                ('hyperparameter.beta', 0.1),
                 ('hyperparameter.gamma', 0.99),
                 ('hyperparameter.epsilon', 1.0),
                 ('database.local_size', 10000),
@@ -76,7 +75,6 @@ class WorkerBase(Node):
             self.get_parameter('number.iterations').value,
             self.get_parameter('number.episodes').value,
             self.get_parameter('hyperparameter.alpha').value,
-            self.get_parameter('hyperparameter.beta').value,
             self.get_parameter('hyperparameter.gamma').value,
             self.get_parameter('hyperparameter.epsilon').value,
             self.get_parameter('decay_rate').value,
@@ -144,7 +142,7 @@ class WorkerBase(Node):
 
     def step(self, collect: bool = True, testing: bool = False) -> Tuple[int, float]:
         """Generate experiences using the mean-field model for a policy."""
-        
+
         # Create a subscriber
         # This node subscribes to messages of type
         # nav_msgs/Odometry (i.e. position and orientation of the robot)
@@ -210,7 +208,7 @@ class WorkerBase(Node):
                     old_action,
                     reward,
                     state,
-                    self._policy.act(np.expand_dims(state, axis=0)),
+                    action,
                     self.done)
                 self._db.save_experience(new_exp, self.done)
             self.get_logger().info("Iter: %s, reward: %s" % (i, reward))
@@ -226,7 +224,7 @@ class WorkerBase(Node):
                 old_state = state
                 old_action = action
 
-                self.execute_action(self.translate_action(action))
+                #self.execute_action(self.translate_action(action))
             else:
                 # if done reset world and model
                 self.pause_physics()

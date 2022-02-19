@@ -20,7 +20,6 @@ class WorkerParameters():
         'n_iterations',
         'n_episodes',
         'alpha',
-        'beta',
         'gamma',
         'epsilon',
         'decay_rate',
@@ -33,7 +32,6 @@ class WorkerParameters():
     n_iterations: int    # default: 1000
     n_episodes: int      # default: 5000
     alpha: float         # default: 0.3
-    beta: float          # default: 0.1
     gamma: float         # default: 0.99
     epsilon: float       # default: 1.0
     decay_rate: int      # default: 500

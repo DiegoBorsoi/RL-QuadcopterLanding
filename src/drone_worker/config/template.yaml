@@ -1,7 +1,7 @@
 dw:
     worker_node:
         ros__parameters:
-            use_gpu: False
+            use_gpu: True
             number:
                 states: 12
                 actions: 6
@@ -9,7 +9,6 @@ dw:
                 episodes: 2 #5000
             hyperparameter:
                 alpha: 0.007
-                beta: 0.1
                 gamma: 0.99
                 epsilon: 1.0
             database:
