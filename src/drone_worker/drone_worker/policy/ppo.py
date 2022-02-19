@@ -237,8 +237,9 @@ class WorkerPPO():
 
     def load_model(self, path_to_model: str) -> None:
         """Load model for inference or training use."""
-        self._neural_net = keras.models.load_model(path_to_model + 'trained_model_actor')
-        self._critic_net = keras.models.load_model(path_to_model + 'trained_model_critic')
+        self._neural_net = keras.models.load_model(path_to_model + 'trained_model_actor', compile=False) 
+        # compile=False needed when we want only to test the model
+        self._critic_net = keras.models.load_model(path_to_model + 'trained_model_critic', compile=False)
 
     def save_model(self, path_to_model: str) -> None:
         """Load model for inference or training use."""
