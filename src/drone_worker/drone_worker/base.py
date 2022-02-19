@@ -280,7 +280,7 @@ class WorkerBase(Node):
                 delta_roll = -math.pi / 2
             elif out_right:
                 left_laser = self.last_laserscan_rays[5] / math.cos(laser_angle)
-                remaining_left_laser = self.last_laserscan_rays[6] - front_laser
+                remaining_left_laser = self.last_laserscan_rays[6] - left_laser
                 laser_paral_dist = left_laser * math.sin(laser_angle)
                 scalene_triang_known_angle = math.pi - laser_angle
                 platform_side = math.sqrt(laser_paral_dist ** 2 + remaining_left_laser ** 2 - 2 * laser_paral_dist * remaining_left_laser * math.cos(scalene_triang_known_angle))
