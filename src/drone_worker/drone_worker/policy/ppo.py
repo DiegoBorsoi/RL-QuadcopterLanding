@@ -197,8 +197,12 @@ class WorkerPPO():
         new_action_logits = self._neural_net(batch[STATE])
         new_action_probs = tf.nn.softmax(new_action_logits)
 
+        # adjust 0 number to be at least 1e-10
+        new_action_probs_np = new_action_probs.numpy()
+        new_action_probs_adjusted  = np.where(new_action_probs_np > 1.0e-10, new_action_probs_np, 1.0e-10)
+
         # Actor Loss with Entropy
-        entropy = np.sum(-1 * new_action_probs.numpy() * np.log(new_action_probs.numpy()), axis=1)
+        entropy = np.sum(-1 * new_action_probs_adjusted * np.log(new_action_probs_adjusted), axis=1)
         # print(f'Entropy: {entropy.mean()}')
 
         ratio = tf.math.divide(new_action_probs, action_probs)
