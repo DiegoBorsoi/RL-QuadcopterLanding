@@ -9,7 +9,7 @@ ros2 launch drone_worker drone_worker.launch.py 'policy_type:=PPO' 'open_gui:=Fa
 
 CUDA_VISIBLE_DEVICES=5 ros2 launch drone_worker drone_worker.launch.py 'policy_type:=PPO' 'open_gui:=False'
 CUDA_VISIBLE_DEVICES=5 ros2 launch drone_worker drone_worker.launch.py 'policy_type:=PPO' 'open_gui:=False' 'moving_platform:=True'
-CUDA_VISIBLE_DEVICES=5 nohup ros2 launch drone_worker drone_worker.launch.py 'policy_type:=PPO' 'open_gui:=False' 'moving_platform:=True'
+CUDA_VISIBLE_DEVICES=5 nohup ros2 launch drone_worker drone_worker.launch.py 'policy_type:=PPO' 'open_gui:=False' 'moving_platform:=True' &
 
 jobs
 kill %1
