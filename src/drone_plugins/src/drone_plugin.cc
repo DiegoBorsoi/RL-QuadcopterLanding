@@ -67,7 +67,9 @@ namespace gazebo_plugins
 
     float horizontal_vel_;
 
-    float vertical_vel_;
+    float current_vertical_vel_;
+    float vertical_vel_max_;
+    float vertical_step_;
 
     /// Keep latest odometry message
     nav_msgs::msg::Odometry odom_;
@@ -264,9 +266,11 @@ namespace gazebo_plugins
 
     impl_->rot_zero_margin_ = 0.005f;
 
-    impl_->horizontal_vel_ = 0.1f;
+    impl_->horizontal_vel_ = impl_->hover_z_vel_ * 2;
 
-    impl_->vertical_vel_ = 0.005f;
+    impl_->current_vertical_vel_ = impl_->hover_z_vel_;
+    impl_->vertical_vel_max_ = 0.05f;
+    impl_->vertical_step_ = impl_->vertical_vel_max_ / 10;
 
 
     // Listen to the update event (broadcast every simulation iteration)
@@ -283,6 +287,8 @@ namespace gazebo_plugins
     impl_->target_cmd_vel_.angular.x = 0;
     impl_->target_cmd_vel_.angular.y = 0;
     impl_->target_cmd_vel_.angular.z = 0;
+
+    impl_->current_vertical_vel_ = impl_->hover_z_vel_;
 
     //impl_->controllers_.clear();
   }
@@ -357,22 +363,31 @@ namespace gazebo_plugins
       float x_lin_vel_ = sinf(current_pitch) * horizontal_vel_;
       float y_lin_vel_ = sinf(current_roll) * horizontal_vel_;
 
-      float z_lin_vel_ = hover_z_vel_;
       if (target_cmd_vel_.linear.z == 1.0f){
-        z_lin_vel_ += vertical_vel_;
+        if (current_vertical_vel_ < hover_z_vel_ + vertical_vel_max_){
+          current_vertical_vel_ += vertical_step_;
+        }
       }else if (target_cmd_vel_.linear.z == -1.0f){
-        z_lin_vel_ -= vertical_vel_;
+        if (current_vertical_vel_ > hover_z_vel_ - vertical_vel_max_){
+          current_vertical_vel_ -= vertical_step_;
+        }
+      }else if (target_cmd_vel_.linear.z == 0){
+        if (current_vertical_vel_ < hover_z_vel_){
+          current_vertical_vel_ += vertical_step_;
+        }else if (current_vertical_vel_ > hover_z_vel_){
+          current_vertical_vel_ -= vertical_step_;
+        }
       }
 
       if (static_cast<float>(pose.Pos().Z()) < 0.1f){
-        z_lin_vel_ = 0;
+        current_vertical_vel_ = 0;
       }
       
       model_->SetLinearVel(
         ignition::math::Vector3d(
           x_lin_vel_,
           y_lin_vel_,
-          z_lin_vel_));
+          current_vertical_vel_));
 
       model_->SetAngularVel(
         ignition::math::Vector3d(

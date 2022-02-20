@@ -261,6 +261,8 @@ namespace gazebo_plugins
   void PlatformPlugin::Reset()
   {
     impl_->last_update_time_ = impl_->world_->SimTime();
+    impl_->reached_target_roll = true;
+    impl_->reached_target_pitch = true;
   }
 
   void PlatformPluginPrivate::OnUpdate(const gazebo::common::UpdateInfo & _info)
