@@ -130,6 +130,8 @@ class WorkerBase(Node):
 
         self.odom_updated = False
         self.laser_updated = False
+
+        self.platform_rot = [0.0, 0.0]
         # -----------------------------------------------------------------------------------------
 
     @property
@@ -157,6 +159,11 @@ class WorkerBase(Node):
                                                         '/' + self.quadcopter_namespace + '/laser',
                                                         self.laser_callback,
                                                         10)
+
+        self.platform_subscriber = self.create_subscription(Odometry,
+                                                            '/platform_odom',
+                                                            self.platform_callback,
+                                                            10)
         
         # Create a publisher
         # This node publishes the desired linear and angular velocity of the robot (in the
@@ -375,10 +382,9 @@ class WorkerBase(Node):
             (self.last_odom_vel_linear[1]) ** 2 + 
             (self.last_odom_vel_linear[2]) ** 2)
 
-        platform_rot = [0.0, 0.0]
         dist_eucl_rot = math.fabs(
-            (self.last_odom_rot[0] - platform_rot[0]) ** 2 + 
-            (self.last_odom_rot[1] - platform_rot[1]) ** 2)
+            (self.last_odom_rot[0] - self.platform_rot[0]) ** 2 + 
+            (self.last_odom_rot[1] - self.platform_rot[1]) ** 2)
 
         reward = - dist_eucl_pos - 0.2 * dist_eucl_vel - 0.1 * dist_eucl_rot
 
@@ -445,12 +451,26 @@ class WorkerBase(Node):
             if i < 0.1:
                 platform_touch = True
 
-        platform_rot = [0.0, 0.0]
         # if we are touching the platform, but we are not in the same plane (roll-pitch) of the platform
-        if platform_touch and (math.fabs(self.last_odom_rot[0] - platform_rot[0]) > 0.1 or math.fabs(self.last_odom_rot[1] - platform_rot[1]) > 0.1):
+        if platform_touch and (math.fabs(self.last_odom_rot[0] - self.platform_rot[0]) > 0.1 or math.fabs(self.last_odom_rot[1] - self.platform_rot[1]) > 0.1):
             self.reset = True
         else:
             self.done = self.done or platform_touch
+
+    def platform_callback(self, msg):
+        """
+        Receive the odometry information containing the position and orientation
+        of the platform in the global reference frame. 
+        The position is x, y, z.
+        The orientation is a x,y,z,w quaternion. 
+        """
+        roll, pitch, _ = self._euler_from_quaternion(
+            msg.pose.pose.orientation.x,
+            msg.pose.pose.orientation.y,
+            msg.pose.pose.orientation.z,
+            msg.pose.pose.orientation.w)
+
+        self.platform_rot = [roll, pitch]
 
     # ---------------------------------------------------------------------------------------------
     # --- Functions for gazebo node interactions --------------------------------------------------
