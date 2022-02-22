@@ -12,6 +12,7 @@ import numpy as np
 
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow.keras.optimizers import Adam
 from tensorflow.python.keras.losses import MeanSquaredError
 from tensorflow.python.framework.ops import EagerTensor
 
@@ -37,6 +38,7 @@ class WorkerPolicyDQN():
         '_loss_function',
         '_gradients',
         '_hidden_layer_sizes',
+        '_optimizer'
     ]
 
     def __init__(
@@ -79,6 +81,7 @@ class WorkerPolicyDQN():
         # Set tensorflow loss function and optimizer
         self._loss_function: MeanSquaredError = MeanSquaredError()
         self._gradients: List[np.ndarray] = []
+        self._optimizer = Adam(learning_rate=self._alpha)
 
     @property
     def atype(self):
@@ -96,6 +99,8 @@ class WorkerPolicyDQN():
         # Calculate and apply graidents.
         self._gradients = tape.gradient(
             loss, self._neural_net.trainable_variables)
+
+        self.optimize()
 
     def calculate_q_loss(
             self,
@@ -121,7 +126,8 @@ class WorkerPolicyDQN():
     def act(
             self,
             state: np.ndarray,
-            epsilon: float = 0.3) -> Union[int, np.integer]:
+            epsilon: float = 0.3,
+            eps_action: int = 0) -> Union[int, np.integer]:
         """Apply the target policy (π)."""
         if np.random.uniform() > epsilon:
             # print(self._neural_net(state).numpy())
@@ -148,55 +154,15 @@ class WorkerPolicyDQN():
     def transfer_parameters(self) -> None:
         """Transfers parameters from main network to target network."""
         self._target_net.set_weights(self._neural_net.get_weights())
-    '''
-    def transfer_gradients(
-            self,
-            request: Gradients.Request) -> Gradients.Request:
-        """Transfer calculated gradients to Gradients srv file."""
-        request.layer.input_layer = (self._gradients[0].numpy()).flatten().tolist()
-        request.layer.hidden_0 = (self._gradients[1].numpy()).flatten().tolist()
-        request.layer.middle_0 = (self._gradients[2].numpy()).flatten().tolist()
-        request.layer.hidden_1 = (self._gradients[3].numpy()).flatten().tolist()
-        request.layer.output_layer = (self._gradients[4].numpy()).flatten().tolist()
-        request.layer.output = (self._gradients[5].numpy()).flatten().tolist()
-        return request
 
-    def set_policy_weights(
-            self,
-            network_weights: List[np.ndarray]) -> None:
-        """Set neural network weights for policy from list."""
-        self._neural_net.set_weights(network_weights)
+    def optimize(self) -> None:
+        """Optimize global network policy."""
+        self._optimizer.apply_gradients(
+            zip(self._gradients, self._neural_net.trainable_variables))
 
-    def set_target_weights(
-            self,
-            network_weights: List[np.ndarray]) -> None:
-        """Set target network weights for training from list."""
-        self._target_net.set_weights(network_weights)
-
-    def parse_and_set_policy_weights(
-            self,
-            response: Weights.Response()) -> None:
-        """Parse and set neural network weights from srv response."""
-        weights = []
-        weights.append(
-            np.array(response.layer.input_layer).reshape(
-                self._n_states,
-                self._hidden_layer_sizes[0]))
-        weights.append(np.array(response.layer.hidden_0))
-        weights.append(np.array(response.layer.middle_0).reshape(
-            self._hidden_layer_sizes[0],
-            self._hidden_layer_sizes[1]))
-        weights.append(np.array(response.layer.hidden_1))
-        weights.append(np.array(response.layer.output_layer).reshape(
-            self._hidden_layer_sizes[1],
-            self._n_actions))
-        weights.append(np.array(response.layer.output))
-        self.set_policy_weights(weights)
-
-    def get_policy_weights(self) -> List[np.ndarray]:
-        """Get weights for policy."""
-        return self._neural_net.get_weights()
-    '''
     def load_model(self, path_to_model: str) -> None:
         """Load model for inference or training use."""
-        self._neural_net = keras.models.load_model(path_to_model)
+        self._neural_net = keras.models.load_model(path_to_model + "trained_model")
+
+    def save_model(self, path_to_model: str) -> None:
+        self._neural_net.save(path_to_model + "trained_model")
