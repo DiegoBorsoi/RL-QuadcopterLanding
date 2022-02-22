@@ -44,7 +44,6 @@ class WorkerParameters():
             # The decay rate_value is same as final epsilon value.
             if self.epsilon > rate_value:
                 self.epsilon -= rate_value
-
             else:
                 self.epsilon = rate_value
 

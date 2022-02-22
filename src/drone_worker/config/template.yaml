@@ -10,9 +10,9 @@ dw:
             hyperparameter:
                 alpha: 0.007
                 gamma: 0.99
-                epsilon: 1.0
+                epsilon: 0.5
             database:
                 local_size: 10000
-            decay_rate: 10
+            decay_rate: 1
             training_delay: 0
             hidden_layers: [64,64]

@@ -233,9 +233,12 @@ class WorkerPPO():
     def act(
             self,
             state: np.ndarray,
-            epsilon: Optional[float] = None) -> Union[int, np.integer]:
+            epsilon: Optional[float] = None,
+            eps_action: int = 0) -> Union[int, np.integer]:
         """Apply the policy for a ROS inference service request."""
-        _ = epsilon  # Unused by REINFORCE
+        if np.random.uniform() < epsilon: # with a probability of epsilon, execute the given static action
+            return eps_action
+
         prob = self._neural_net(state)
         return tf.random.categorical(prob, 1)[0, 0].numpy()
 

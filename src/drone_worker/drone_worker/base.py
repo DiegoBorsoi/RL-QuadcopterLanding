@@ -202,7 +202,10 @@ class WorkerBase(Node):
 
             # get the new experience
             state = self.get_state()
-            action = self._policy.act(np.expand_dims(state, axis=0))
+
+            #action = self._policy.act(np.expand_dims(state, axis=0))
+            action = self._policy.act(np.expand_dims(state, axis=0), self._wp.epsilon, 4) # with a prob epsilon execute the action given (4 = down)
+
             reward = self.calculate_reward()
             total_reward += reward
             #self.get_logger().info("State:\n %s\naction:\n %s\n" % (state, action))

@@ -16,7 +16,7 @@ class Saver(Node):
 
 		self._sub = self.create_subscription(Float32, 'episode_data', self.data_callback, 10)
 
-		self.output_file = output_folder + 'saved_weights'
+		self.output_file = output_folder + 'saved_reward'
 
 		with open(self.output_file, 'w') as f:
 			a = ""
@@ -29,7 +29,7 @@ class Saver(Node):
 		if (len(self.last_data) >= 1):
 			with open(self.output_file, 'a') as f:
 				f.write(" ".join([str(i) for i in self.last_data]) + '\n')
-			
+
 			self.last_data = []
 
 
