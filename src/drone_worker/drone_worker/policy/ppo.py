@@ -86,7 +86,7 @@ class WorkerPPO():
         for _ in range(10):
             c_loss = self.train_critic(returns, batch, batch_size)
             self.train_actor(returns, values_pred, action_probs, c_loss, batch, batch_size)
-            self.optimize
+            self.optimize()
 
     def optimize(self) -> None:
         """Optimize global network policy."""
