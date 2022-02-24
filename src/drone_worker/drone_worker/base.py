@@ -326,7 +326,7 @@ class WorkerBase(Node):
                 laser_paral_dist = self.last_laserscan_rays[2] * math.sin(laser_angle)
                 delta_pitch = -math.atan((self.last_laserscan_rays[5] - central_laser) / laser_paral_dist) 
 
-        s += [delta_pitch, delta_roll]
+        s += [delta_roll, delta_pitch]
 
         delta_z = min(self.last_laserscan_rays)
         if not (self.last_laserscan_rays[5] == math.inf):
