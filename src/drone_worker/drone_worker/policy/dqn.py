@@ -1,8 +1,3 @@
-"""DQN model class for RL experiments with neural net function approx.
-
-Written by: Zahi Kakish (zmk5)
-
-"""
 from typing import Dict
 from typing import List
 from typing import Tuple

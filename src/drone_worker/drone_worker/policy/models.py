@@ -1,7 +1,3 @@
-"""Unique class-based models not formed using the keras Sequential class.
-
-Written by: Zahi Kakish (zmk5)
-"""
 from typing import List
 from typing import Optional
 from typing import Tuple

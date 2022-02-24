@@ -1,7 +1,3 @@
-"""Paramters for use by the worker.
-
-Written by: Zahi Kakish (zmk5)
-"""
 from typing import Optional
 from typing import Union
 

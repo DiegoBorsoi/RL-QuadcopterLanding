@@ -8,7 +8,7 @@ from drone_worker.base import WorkerBase
 
 
 class Tester(WorkerBase):
-    """Worker node for generating and training experiences."""
+    """Tester node."""
 
     def __init__(
             self,
@@ -19,7 +19,7 @@ class Tester(WorkerBase):
         """Initialize Worker Node class."""
         super().__init__(name, policy_type)
 
-        # Set the output file for final model.
+        # Set the input file for final model.
         self.input_folder = input_folder
 
 

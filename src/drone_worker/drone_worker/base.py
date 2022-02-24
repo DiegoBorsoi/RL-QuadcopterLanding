@@ -1,7 +1,3 @@
-"""Base class for worker containing large initialization.
-
-Written by: Zahi Kakish (zmk5)
-"""
 from typing import Tuple
 
 import numpy as np

@@ -77,8 +77,10 @@ class WorkerPPO():
         """Train the soft actor-critic policy based on a sample batch."""
         values_pred = self._critic_net(batch[STATE])
         next_values_pred = self._critic_net(batch[NEXT_STATE])
+
         #returns = self.calculate_nstep_returns(batch, batch_size, next_values_pred)
         returns = self.calculate_gae_returns(batch, batch_size, values_pred, next_values_pred)
+
         # Compute the action probs and value for current and next state.
         action_logits = self._neural_net(batch[STATE])
         action_probs = tf.nn.softmax(action_logits)
@@ -143,12 +145,6 @@ class WorkerPPO():
             next_v_pred: tf.Tensor) -> np.ndarray:
         """Calculate n-step advantage returns."""
         ret_value = np.zeros_like(batch[REWARD])
-        # try:
-        #     future_ret = next_v_pred.numpy()[-1]
-        #     print(f'Future Return: {future_ret}')
-
-        # except IndexError:
-        #     future_ret = next_v_pred.numpy()
         future_ret = 0.0
 
         for t in reversed(range(batch_size + 1)):
@@ -162,7 +158,7 @@ class WorkerPPO():
             batch_size: int,
             v_preds: tf.Tensor,
             next_v_pred: tf.Tensor) -> np.ndarray:
-        """Calculate Generalaized Advantage Estimation (GAE) returns."""
+        """Calculate Generalized Advantage Estimation (GAE) returns."""
         gaes = np.zeros_like(batch[REWARD])
         future_gae = 0.0
 
@@ -250,13 +246,5 @@ class WorkerPPO():
 
     def save_model(self, path_to_model: str) -> None:
         """Load model for inference or training use."""
-        # Predict required for saving due to odd error found here:
-        # https://github.com/tensorflow/tensorflow/issues/31057
-        
-        # self._neural_net.predict(np.arange(self._n_states).reshape(1, self._n_states))
-        #self._neural_net.predict(np.array([[0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.92, 0.0]]))
         self._neural_net.save(path_to_model + 'trained_model_actor')
-
-        # self._critic_net.predict(np.arange(self._n_states).reshape(1, self._n_states))
-        #self._critic_net.predict(np.array([[0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.92, 0.0]]))
         self._critic_net.save(path_to_model + 'trained_model_critic')

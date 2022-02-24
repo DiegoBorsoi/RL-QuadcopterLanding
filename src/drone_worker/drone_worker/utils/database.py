@@ -1,7 +1,3 @@
-"""Local Database for Herding Experiment.
-
-Written by: Zahi Kakish (zmk5)
-"""
 from typing import Dict
 from typing import Optional
 from typing import Tuple
