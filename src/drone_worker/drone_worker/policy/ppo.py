@@ -229,7 +229,7 @@ class WorkerPPO():
     def act(
             self,
             state: np.ndarray,
-            epsilon: Optional[float] = None,
+            epsilon: Optional[float] = 0,
             eps_action: int = 0) -> Union[int, np.integer]:
         """Apply the policy for a ROS inference service request."""
         if np.random.uniform() < epsilon: # with a probability of epsilon, execute the given static action

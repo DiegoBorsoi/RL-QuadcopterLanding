@@ -175,13 +175,15 @@ class WorkerBase(Node):
         run_steps = 0
         run_max_steps = 300
 
+        spawn_bound_half_side = 1.5
+
         self.reset = True
         self.done = False
         for i in range(0, self._wp.n_iterations + 1):
             
             if self.reset or self.done:
-                initial_pose.position.x = random.uniform(-1, 1)
-                initial_pose.position.y = random.uniform(-1, 1)
+                initial_pose.position.x = random.uniform(-spawn_bound_half_side, spawn_bound_half_side)
+                initial_pose.position.y = random.uniform(-spawn_bound_half_side, spawn_bound_half_side)
                 initial_pose.position.z = random.uniform(2, 3)
                 self._spawn_entity(initial_pose)
                 self.unpause_physics()
@@ -197,8 +199,8 @@ class WorkerBase(Node):
             # get the new experience
             state = self.get_state()
 
-            #action = self._policy.act(np.expand_dims(state, axis=0))
-            action = self._policy.act(np.expand_dims(state, axis=0), self._wp.epsilon, 4) # with a prob epsilon execute the action given (4 = down)
+            action = self._policy.act(np.expand_dims(state, axis=0))
+            #action = self._policy.act(np.expand_dims(state, axis=0), self._wp.epsilon, 4) # with a prob epsilon execute the action given (4 = down)
 
             reward = self.calculate_reward()
             total_reward += reward
