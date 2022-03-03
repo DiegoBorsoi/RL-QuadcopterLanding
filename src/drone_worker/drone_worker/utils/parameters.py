@@ -19,20 +19,18 @@ class WorkerParameters():
         'gamma',
         'epsilon',
         'decay_rate',
-        'training_delay',
         'batch_size'
     ]
 
-    n_states: int        # default: 5
-    n_actions: int       # default: 5
-    n_iterations: int    # default: 1000
-    n_episodes: int      # default: 5000
-    alpha: float         # default: 0.3
-    gamma: float         # default: 0.99
-    epsilon: float       # default: 1.0
-    decay_rate: int      # default: 500
-    training_delay: int  # default: 100
-    batch_size: int      # default: 16
+    n_states: int
+    n_actions: int
+    n_iterations: int
+    n_episodes: int
+    alpha: float
+    gamma: float
+    epsilon: float
+    decay_rate: int
+    batch_size: int
 
     def decay_epsilon(self, episode: int, rate_value: float = 0.1) -> None:
         """Decay value of epsilon for use during training."""

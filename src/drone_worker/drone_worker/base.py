@@ -59,7 +59,6 @@ class WorkerBase(Node):
                 ('hyperparameter.gamma', 0.99),
                 ('hyperparameter.epsilon', 1.0),
                 ('database.local_size', 10000),
-                ('training_delay', 100),
                 ('decay_rate', 500),
                 ('batch_size', 16),
                 ('hidden_layers', [64, 64]),
@@ -74,7 +73,6 @@ class WorkerBase(Node):
             self.get_parameter('hyperparameter.gamma').value,
             self.get_parameter('hyperparameter.epsilon').value,
             self.get_parameter('decay_rate').value,
-            self.get_parameter('training_delay').value,
             self.get_parameter('batch_size').value
         )
 
@@ -433,9 +431,7 @@ class WorkerBase(Node):
         if self.skip_count_laser != 0:
             return
 
-        rays = msg.ranges
-
-        self.last_laserscan_rays = list(rays)        
+        self.last_laserscan_rays = list(msg.ranges)        
 
         self.laser_updated = True
 

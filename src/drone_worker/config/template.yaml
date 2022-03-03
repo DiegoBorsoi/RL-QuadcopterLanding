@@ -14,5 +14,4 @@ dw:
             database:
                 local_size: 10000
             decay_rate: 1
-            training_delay: 0
             hidden_layers: [64,64]

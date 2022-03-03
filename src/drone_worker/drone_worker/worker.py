@@ -58,29 +58,21 @@ class Worker(WorkerBase):
 
     def compute(self, step: int) -> None:
         """Compute the gradient of the local network."""
-        if self.episode >= self._wp.training_delay:
-            
-            if self.atype in ['DQN']:
-                # Transfer network parameters if episode 0 or 100 * n.
-                if self.episode % 100 == 0:
-                    self._policy.transfer_parameters()
+        if self.atype in ['DQN']:
+            # Transfer network parameters if episode 0 or 100 * n.
+            if self.episode % 100 == 0:
+                self._policy.transfer_parameters()
 
-            self.get_logger().info('Computing gradients...')
+        self.get_logger().info('Computing gradients...')
 
-            if self.atype in ['PPO']:
-                batch = self._db.sample_batch(step, 'all')
-                self._policy.train(batch, step)
-
-            else:
-                batch = self._db.sample_batch(self._wp.batch_size)
-                self._policy.train(batch, self._wp.batch_size)
+        if self.atype in ['PPO']:
+            batch = self._db.sample_batch(step, 'all')
+            self._policy.train(batch, step)
 
         else:
-            self.get_logger().warn(
-                'Skipping computing gradients till episode ' +
-                f'{self._wp.training_delay}!'
-            )
-
+            batch = self._db.sample_batch(self._wp.batch_size)
+            self._policy.train(batch, self._wp.batch_size)
+        
         self.episode += 1
 
     def test(self, n_test_runs: int = 10) -> None:
