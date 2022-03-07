@@ -185,7 +185,7 @@ class WorkerBase(Node):
                 initial_pose.position.x = random.uniform(-spawn_bound_half_side, spawn_bound_half_side)
                 initial_pose.position.y = random.uniform(-spawn_bound_half_side, spawn_bound_half_side)
                 initial_pose.position.z = random.uniform(2, 3)
-                self._spawn_entity(initial_pose)
+                self.spawn_entity(initial_pose)
                 self.unpause_physics()
                 self.reset = False
                 self.done = False
@@ -475,93 +475,122 @@ class WorkerBase(Node):
     def execute_action(self, action):
         self.velocity_publisher.publish(action)
 
-    def _spawn_entity(self, initial_pose, timeout=5.0):
-
-        client = self.create_client(SpawnEntity, '/spawn_entity')
-        if client.wait_for_service(timeout_sec=timeout):
-            req = SpawnEntity.Request()
-            req.name = self.quadcopter_name
-            req.xml = self.model
-            req.robot_namespace = self.quadcopter_namespace
-            req.initial_pose = initial_pose
-            self.get_logger().info('Calling service /spawn_entity')
-            srv_call = client.call_async(req)
-            while rclpy.ok():
-                if srv_call.done():
-                    self.get_logger().info('Spawn status: Successfull')
-                    break
-                rclpy.spin_once(self)
-            return srv_call.result().success
-        self.get_logger().error('Service /spawn_entity unavailable. Was Gazebo started with GazeboRosFactory?')
-        return False
+    def spawn_entity(self, initial_pose, timeout=5.0):
+        ris = False
+        while not ris:
+            try:
+                client = self.create_client(SpawnEntity, '/spawn_entity')
+                if client.wait_for_service(timeout_sec=timeout):
+                    req = SpawnEntity.Request()
+                    req.name = self.quadcopter_name
+                    req.xml = self.model
+                    req.robot_namespace = self.quadcopter_namespace
+                    req.initial_pose = initial_pose
+                    self.get_logger().info('Calling service /spawn_entity')
+                    srv_call = client.call_async(req)
+                    while rclpy.ok():
+                        if srv_call.done():
+                            self.get_logger().info('Spawn status: Successfull')
+                            ris = True
+                            return
+                        rclpy.spin_once(self)
+                    #ris = srv_call.result().success
+                self.get_logger().error('Service /spawn_entity unavailable. Was Gazebo started with GazeboRosFactory?')
+            except:
+                self.get_logger().error('Service /spawn_entity catched error.')
 
     def delete_entity(self, timeout=5.0):
-        client = self.create_client(DeleteEntity, '/delete_entity')
-        if client.wait_for_service(timeout_sec=timeout):
-            req = DeleteEntity.Request()
-            req.name = self.quadcopter_name
-            self.get_logger().info('Calling service /delete_entity')
-            srv_call = client.call_async(req)
-            while rclpy.ok():
-                if srv_call.done():
-                    self.get_logger().info('Spawn status: Successfull')
-                    break
-                rclpy.spin_once(self)
-            return srv_call.result().success
-        self.get_logger().error('Service /delete_entity unavailable. Was Gazebo started with GazeboRosFactory?')
-        return False
+        ris = False
+        while not ris:
+            try:
+                client = self.create_client(DeleteEntity, '/delete_entity')
+                if client.wait_for_service(timeout_sec=timeout):
+                    req = DeleteEntity.Request()
+                    req.name = self.quadcopter_name
+                    self.get_logger().info('Calling service /delete_entity')
+                    srv_call = client.call_async(req)
+                    while rclpy.ok():
+                        if srv_call.done():
+                            self.get_logger().info('Delete status: Successfull')
+                            ris = True
+                            return
+                        rclpy.spin_once(self)
+                    #ris = srv_call.result().success
+                self.get_logger().error('Service /delete_entity unavailable. Was Gazebo started with GazeboRosFactory?')
+            except:
+                self.get_logger().error('Service /delete_entity catched error.')
 
     def unpause_physics(self, timeout=5.0):
-        client = self.create_client(Empty, '/unpause_physics')
-        if client.wait_for_service(timeout_sec=timeout):
-            srv_call = client.call_async(Empty.Request())
-            while rclpy.ok():
-                if srv_call.done():
-                    self.get_logger().info('Unpause physics status: done')
-                    break
-                rclpy.spin_once(self)
-            return True
-        self.get_logger().error('Service /unpause_physics unavailable. Was Gazebo started right?')
-        return False
+        ris = False
+        while not ris:
+            try:
+                client = self.create_client(Empty, '/unpause_physics')
+                if client.wait_for_service(timeout_sec=timeout):
+                    srv_call = client.call_async(Empty.Request())
+                    while rclpy.ok():
+                        if srv_call.done():
+                            self.get_logger().info('Unpause physics status: done')
+                            ris = True
+                            return
+                        rclpy.spin_once(self)
+                    #ris = True
+                self.get_logger().error('Service /unpause_physics unavailable. Was Gazebo started right?')
+            except:
+                self.get_logger().error('Service /unpause_physics catched error.')
 
     def pause_physics(self, timeout=5.0):
-        client = self.create_client(Empty, '/pause_physics')
-        if client.wait_for_service(timeout_sec=timeout):
-            srv_call = client.call_async(Empty.Request())
-            while rclpy.ok():
-                if srv_call.done():
-                    self.get_logger().info('Pause physics status: done')
-                    break
-                rclpy.spin_once(self)
-            return True
-        self.get_logger().error('Service /pause_physics unavailable. Was Gazebo started right?')
-        return False
+        ris = False
+        while not ris:
+            try:
+                client = self.create_client(Empty, '/pause_physics')
+                if client.wait_for_service(timeout_sec=timeout):
+                    srv_call = client.call_async(Empty.Request())
+                    while rclpy.ok():
+                        if srv_call.done():
+                            self.get_logger().info('Pause physics status: done')
+                            ris = True
+                            return
+                        rclpy.spin_once(self)
+                    #ris = True
+                self.get_logger().error('Service /pause_physics unavailable. Was Gazebo started right?')
+            except:
+                self.get_logger().error('Service /pause_physics catched error.')
 
     def reset_sim(self, timeout=5.0):
-        client = self.create_client(Empty, '/reset_simulation')
-        if client.wait_for_service(timeout_sec=timeout):
-            srv_call = client.call_async(Empty.Request())
-            while rclpy.ok():
-                if srv_call.done():
-                    self.get_logger().info('Reset simulation status: done')
-                    break
-                rclpy.spin_once(self)
-            return True
-        self.get_logger().error('Service /reset_simulation unavailable. Was Gazebo started right?')
-        return False
+        ris = False
+        while not ris:
+            try:
+                client = self.create_client(Empty, '/reset_simulation')
+                if client.wait_for_service(timeout_sec=timeout):
+                    srv_call = client.call_async(Empty.Request())
+                    while rclpy.ok():
+                        if srv_call.done():
+                            self.get_logger().info('Reset simulation status: done')
+                            ris = True
+                            return
+                        rclpy.spin_once(self)
+                    #ris = True
+                self.get_logger().error('Service /reset_simulation unavailable. Was Gazebo started right?')
+            except:
+                self.get_logger().error('Service /reset_simulation catched error.')
 
     def reset_world(self, timeout=5.0):
-        client = self.create_client(Empty, '/reset_world')
-        if client.wait_for_service(timeout_sec=timeout):
-            srv_call = client.call_async(Empty.Request())
-            while rclpy.ok():
-                if srv_call.done():
-                    self.get_logger().info('Reset world status: done')
-                    break
-                rclpy.spin_once(self)
-            return True
-        self.get_logger().error('Service /reset_world unavailable. Was Gazebo started right?')
-        return False
+        ris = False
+        while not ris:
+            try:
+                client = self.create_client(Empty, '/reset_world')
+                if client.wait_for_service(timeout_sec=timeout):
+                    srv_call = client.call_async(Empty.Request())
+                    while rclpy.ok():
+                        if srv_call.done():
+                            self.get_logger().info('Reset world status: done')
+                            ris = True
+                            return
+                        rclpy.spin_once(self)
+                    #ris = True
+                self.get_logger().error('Service /reset_world unavailable. Was Gazebo started right?')
+            except:
+                self.get_logger().error('Service /reset_world catched error.')
 
     # ---------------------------------------------------------------------------------------------
     # --- Utilities funcions ----------------------------------------------------------------------
