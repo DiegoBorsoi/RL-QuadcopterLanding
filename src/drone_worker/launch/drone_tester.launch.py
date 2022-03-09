@@ -59,6 +59,11 @@ def generate_launch_description():
             description='Policy worker will use for training.'
         ),
         DeclareLaunchArgument(
+            'open_gui',
+            default_value=['True'],
+            description='Condition to check for having the gui.'
+        ),
+        DeclareLaunchArgument(
             'moving_platform',
             default_value=['False'],
             description='Condition to check for having the moving platform (default stationary).'
@@ -100,5 +105,6 @@ def generate_launch_description():
         ExecuteProcess(
             cmd=['gzclient', '--verbose'],
             output='screen',
+            condition=IfCondition(LaunchConfiguration('open_gui')),
         )
     ])
