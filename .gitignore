@@ -2,5 +2,9 @@ build/
 install/
 log/
 saves/
+tensorboard-test/
+tensorboard-data/
+
 *.pyc
+
 nohup.log
