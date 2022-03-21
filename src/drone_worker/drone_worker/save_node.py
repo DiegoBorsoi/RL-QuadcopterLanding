@@ -39,11 +39,14 @@ def main():
 	output_folder = sys.argv[1]
 	save_node = Saver(output_folder)
 
-	rclpy.spin(save_node)
+	try:
+		rclpy.spin(save_node)
+
+	except KeyboardInterrupt:
+		pass
 
 	save_node.destroy_node()
 	rclpy.shutdown()
-	sys.exit(exit_code)
 
 
 if __name__ == '__main__':

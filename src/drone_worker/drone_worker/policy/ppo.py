@@ -239,12 +239,23 @@ class WorkerPPO():
         return tf.random.categorical(prob, 1)[0, 0].numpy()
 
     def load_model(self, path_to_model: str) -> None:
+        #print("Creati:-------------------------------------------------------------------------------------------------")
+        #print(self._neural_net.summary())
+        #print(self._critic_net.summary())
+        '''
+        self._neural_net.predict([[0.01] * self._n_states])
+        self._critic_net.predict([[0.01] * self._n_states])
+        self.save_model(path_to_model)
+        '''
         """Load model for inference or training use."""
-        self._neural_net = keras.models.load_model(path_to_model + 'trained_model_actor', compile=False) 
+        self._neural_net = keras.models.load_model(path_to_model + 'trained_model_actor', custom_objects={"ActorModel": ActorModel})#, compile=False) 
         # compile=False needed when we want only to test the model
-        self._critic_net = keras.models.load_model(path_to_model + 'trained_model_critic', compile=False)
+        self._critic_net = keras.models.load_model(path_to_model + 'trained_model_critic', custom_objects={"CriticModel": CriticModel})#, compile=False)
+        #print("Caricati:-----------------------------------------------------------------------------------------------")
+        #print(self._neural_net.summary())
+        #print(self._critic_net.summary())
 
     def save_model(self, path_to_model: str) -> None:
-        """Load model for inference or training use."""
+        """Save model for future inference or training use."""
         self._neural_net.save(path_to_model + 'trained_model_actor')
         self._critic_net.save(path_to_model + 'trained_model_critic')
