@@ -28,8 +28,7 @@ setup(
     entry_points={
         'console_scripts': [
             'train_drone = drone_worker.worker:main',
-            'data_saver = drone_worker.save_node:main',
-            'net_tester = drone_worker.net_tester:main'
+            #'net_tester = drone_worker.net_tester:main'
         ],
     },
 )

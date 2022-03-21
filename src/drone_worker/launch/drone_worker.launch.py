@@ -77,16 +77,6 @@ def generate_launch_description():
                 LaunchConfiguration('param_file'),
             ]
         ),
-        Node(
-            package='drone_worker',
-            executable='data_saver',
-            name='saver',
-            namespace=LaunchConfiguration('worker_ns'),
-            output='screen',
-            arguments=[
-                LaunchConfiguration('output_folder'),
-            ]
-        ),
         ExecuteProcess(
             cmd=['gzserver', '--verbose', world,'-s', 'libgazebo_ros_init.so',
                                                 '-s', 'libgazebo_ros_factory.so',
