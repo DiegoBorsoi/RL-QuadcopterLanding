@@ -32,7 +32,7 @@ class SaveModelCallback(BaseCallback):
 
     def _on_rollout_end(self) -> None:
 
-        if self.num_timesteps % self.save_skip == 1:
+        if self.num_timesteps % self.save_skip == 0:
             print(f"Saving new model to {self.save_path}.zip")
             self.model.save(self.save_path)
 
