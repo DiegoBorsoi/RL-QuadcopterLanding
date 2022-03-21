@@ -1,135 +1,119 @@
+import os
 import sys
+import yaml
 
 import numpy as np
 
-import rclpy
-from rclpy.callback_groups import ReentrantCallbackGroup
+from drone_worker.gazebo_env import DroneEnv
 
-from std_msgs.msg import Float32
-
-from drone_worker.base import WorkerBase
+from stable_baselines3 import PPO
+from stable_baselines3.common.callbacks import BaseCallback
 
 
-class Worker(WorkerBase):
+class SaveModelCallback(BaseCallback):
+    """
+    Callback for saving a model every ``save_skip`` episodes.
+
+    :param save_skip: (int) number of timesteps (episodes) to skip before saving the model.
+    :param log_dir: (str) Path to the folder where the model will be saved.
+      It must contains the file created by the ``Monitor`` wrapper.
+    :param verbose: (int)
+    """
+    def __init__(self, save_skip: int, log_dir: str, verbose=1):
+        super(SaveModelCallback, self).__init__(verbose)
+        self.save_skip = save_skip
+        self.log_dir = log_dir
+        self.save_path = os.path.join(log_dir, 'rl_model')
+
+    def _init_callback(self) -> None:
+        # Create folder if needed
+        if self.log_dir is not None:
+            os.makedirs(self.log_dir, exist_ok=True)
+
+    def _on_rollout_end(self) -> None:
+
+        if self.num_timesteps % self.save_skip == 1:
+            print(f"Saving new model to {self.save_path}.zip")
+            self.model.save(self.save_path)
+
+    def _on_step(self) -> bool:
+        return True
+
+
+class Worker():
     """Worker node for generating and training experiences."""
 
     def __init__(
             self,
-            #worker_id: int,
-            name: str,
-            output_file: str = 'test_model',
-            policy_type: str = 'DQN') -> None:
-        """Initialize Worker Node class."""
-        super().__init__(name, policy_type)
+            output_folder: str = 'saves-default/',
+            policy_type: str = 'PPO',
+            params = {"number": {"episode_max_steps": 300, 
+                                 "episodes": 1000},
+                      "hyperparameter": {"lr": 0.007,
+                                         "gamma": 0.99,
+                                         "epsilon": 1.0},
+                      "hidden_layers": [64, 64]}) -> None:
 
         # Set the output file for final model.
-        self.output_file = output_file
-
-        # Set timer flags, futures, and callback groups.
-        self._cb_group = ReentrantCallbackGroup()
-        self._total_reward = 0
-        self._update = 10
+        self.output_folder = output_folder
         
-        # Set the number of episodes to zero.
-        self.episode = 0
+        # Parameters passed using yaml config file
+        # TODO: controllare/aggiungere parametri
+        self.episode_max_steps = params["number"]['episode_max_steps']
+        self.episodes_number = params["number"]['episodes']
+        self.lr = params["hyperparameter"]['lr']
+        self.gamma = params["hyperparameter"]['gamma']
+        self.epsilon = params["hyperparameter"]['epsilon']
+        self.hidden_layers = params['hidden_layers']
 
-        # Create ROS publisher for episodes data.
-        self._pub = self.create_publisher(
-            Float32, 'episode_data', 10, callback_group=self._cb_group)
+        print("Params: %s" % [self.episode_max_steps, self.episodes_number, self.lr, self.gamma, self.epsilon, self.hidden_layers])
 
-    def collect(self) -> int:
-        """Collect a set of trajectories and store."""
-        self.get_logger().info('Generating experiences...')
-        # Decay epsilon if requred
-        self._wp.decay_epsilon(self.episode, 0.001)
+        # Environment
+        self.env = DroneEnv(self.episode_max_steps)
 
-        # Generate experiences
-        trajectory_length, total_reward = self.step()
-        self.publish(total_reward)
+        #print("Obs space: %s" % self.env.observation_space)
+        #print("Action space: %s" % self.env.action_space)
+        #print("Action sample: %s" % self.env.action_space.sample())
 
-        # Total reward section
-        self._total_reward += total_reward
-        if (self.episode + 1) % self._update == 0:
-            self.get_logger().error(
-                f'Expected Reward: {self._total_reward / self._update}')
-            self._total_reward = 0
-
-        return trajectory_length
-
-    def compute(self, step: int) -> None:
-        """Compute the gradient of the local network."""
-        if self.atype in ['DQN']:
-            # Transfer network parameters if episode 0 or 100 * n.
-            if self.episode % 100 == 0:
-                self._policy.transfer_parameters()
-
-        self.get_logger().info('Computing gradients...')
-
-        if self.atype in ['PPO']:
-            batch = self._db.sample_batch(step, 'all')
-            self._policy.train(batch, step)
-
+        self.save_callback = SaveModelCallback(save_skip=10, log_dir=self.output_folder)
+        # Model
+        if policy_type == 'PPO':
+            self.model = PPO("MlpPolicy", 
+                             env = self.env,
+                             learning_rate = self.lr, 
+                             n_steps = self.episode_max_steps,
+                             batch_size = 100,
+                             verbose = 1,
+                             tensorboard_log = "./tensorboard-test/") # TODO: aggiungere parametri
         else:
-            batch = self._db.sample_batch(self._wp.batch_size)
-            self._policy.train(batch, self._wp.batch_size)
-        
-        self.episode += 1
+            print("ERROR: Invalid policy: %s" % policy_type)
 
-    def test(self, n_test_runs: int = 10) -> None:
-        """Test the current network to check how well the networks trained."""
-        steps: np.ndarray = np.zeros(n_test_runs)
-        rewards: np.ndarray = np.zeros(n_test_runs)
-        for t in range(n_test_runs):
-            steps[t], rewards[t] = self.step(collect=False, testing=True)
-
-        self.get_logger().warn('---------- TEST RUN RESULTS ----------')
-        self.get_logger().warn(f'Average: {steps.mean()}')
-        self.get_logger().warn(f'STD: {steps.std()}')
-        self.get_logger().warn(f'Median: {np.median(steps)}')
-        self.get_logger().warn(f'Average Reward: {rewards.mean()}')
-
-    def publish(self, total_reward: float) -> None:
-        """Publish the total reward for a experience trajectory."""
-        msg = Float32()
-        msg.data = total_reward
-        self._pub.publish(msg)
-
-    def upkeep(self) -> None:
-        """Run policy dependent end-of-experiment upkeep on database, etc."""
-        if self.atype in ['PPO']:
-            self._db.reset()
-
-    def save_model(self) -> None:
-        self._policy.save_model(self.output_file)
+    def learn(self):
+        # Learn for the given number of episodes
+        self.model.learn(total_timesteps=self.episodes_number, callback=self.save_callback)
 
 
 def main():
-    """Start the Worker Node."""
-    rclpy.init()
-
-    output_file = sys.argv[1]
+    output_folder = sys.argv[1]
     policy_type = sys.argv[2]
-    node = Worker('worker_node', output_file, policy_type)
+    params_file = sys.argv[3]
 
     try:
-        for i in range(node.episodes_number()):
-            steps = node.collect()
-            node.compute(steps)
-            node.upkeep()
+        params = {}
+        with open(params_file, 'r') as stream:
+            try:
+                params = yaml.safe_load(stream)
+                params = params["worker_node"]
+            except yaml.YAMLError as exc:
+                print(exc)
 
-            if (i % 10 == 0):
-                node.save_model()
+        worker = Worker(output_folder, policy_type, params)
 
-        node.save_model()
-
-        node.test(2)#100)
+        worker.learn()
+        print("-----FINITO!!!!!------------------------------")
 
     except KeyboardInterrupt:
         pass
-
-    # Destroy the node explicitly
-    node.destroy_node()
-    rclpy.shutdown()
 
 
 if __name__ == '__main__':

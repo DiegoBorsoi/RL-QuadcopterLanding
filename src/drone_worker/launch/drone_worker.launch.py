@@ -14,13 +14,10 @@ from launch.conditions import UnlessCondition
 from launch.substitutions import LaunchConfiguration
 
 
-def get_config_file_path(file_name: str):
+def get_param_file(file_name: str):
     """Get file path for default paramater file."""
     rclpy.logging.get_logger('Launch File').info(file_name)
-    return os.path.join(
-        get_package_share_directory('drone_worker'),
-        'config',
-        file_name)
+    return os.path.join(get_package_share_directory('drone_worker'), 'config', file_name)
 
 
 def generate_launch_description():
@@ -39,8 +36,8 @@ def generate_launch_description():
     """Launch file for training."""
     return LaunchDescription([
         DeclareLaunchArgument(
-            'yaml_file',
-            default_value=[get_config_file_path('template.yaml')],
+            'param_file',
+            default_value=[get_param_file('template.yaml')],
             description='Parameter file for experiment.'
         ),
         DeclareLaunchArgument(
@@ -74,10 +71,10 @@ def generate_launch_description():
             name='worker_node',
             namespace=LaunchConfiguration('worker_ns'),
             output='screen',
-            parameters=[LaunchConfiguration('yaml_file')],
             arguments=[
                 LaunchConfiguration('output_folder'),
                 LaunchConfiguration('policy_type'),
+                LaunchConfiguration('param_file'),
             ]
         ),
         Node(
