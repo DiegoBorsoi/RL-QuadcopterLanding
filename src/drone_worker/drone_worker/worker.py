@@ -75,7 +75,7 @@ class Worker():
         #print("Action space: %s" % self.env.action_space)
         #print("Action sample: %s" % self.env.action_space.sample())
 
-        self.save_callback = SaveModelCallback(save_skip=10, log_dir=self.output_folder)
+        self.save_callback = SaveModelCallback(save_skip=10 * episode_max_steps, log_dir=self.output_folder)
         # Model
         if policy_type == 'PPO':
             self.model = PPO("MlpPolicy", 
@@ -90,7 +90,8 @@ class Worker():
 
     def learn(self):
         # Learn for the given number of episodes
-        self.model.learn(total_timesteps=self.episodes_number, callback=self.save_callback)
+        self.model.learn(total_timesteps=self.episodes_number * self.episode_max_steps, 
+                         callback=self.save_callback)
 
 
 def main():
