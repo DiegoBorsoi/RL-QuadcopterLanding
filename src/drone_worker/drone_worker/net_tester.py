@@ -1,68 +1,88 @@
+import os
 import sys
+import yaml
 
-import numpy as np
+from drone_worker.gazebo_env import DroneEnv
 
-import rclpy
+from stable_baselines3 import PPO
 
-from drone_worker.base import WorkerBase
+from stable_baselines3.common.evaluation import evaluate_policy
 
 
-class Tester(WorkerBase):
-    """Tester node."""
+class Tester():
+    """Worker node for generating and training experiences."""
 
     def __init__(
             self,
-            #worker_id: int,
-            name: str,
-            input_folder: str = 'trained-models/save-1/',
-            policy_type: str = 'DQN') -> None:
-        """Initialize Worker Node class."""
-        super().__init__(name, policy_type)
+            input_folder: str = 'saves-default/',
+            policy_type: str = 'PPO',
+            params = {"number": {"episode_max_steps": 300, 
+                                 "episodes": 1000},
+                      "hyperparameter": {"lr": 0.007,
+                                         "gamma": 0.99,
+                                         "epsilon": 1.0},
+                      "hidden_layers": [64, 64]}) -> None:
 
-        # Set the input file for final model.
+        # Set the output file for final model.
         self.input_folder = input_folder
+        
+        # Parameters passed using yaml config file
+        # TODO: controllare/aggiungere parametri
+        self.episode_max_steps = params["number"]["episode_max_steps"]
+        self.episodes_number = params["number"]["episodes"]
+        self.lr = params["hyperparameter"]["lr"]
+        self.gamma = params["hyperparameter"]["gamma"]
+        self.epsilon = params["hyperparameter"]["epsilon"]
+        self.hidden_layers = params["hidden_layers"]
 
+        print("Params: %s" % [self.episode_max_steps, self.episodes_number, self.lr, self.gamma, self.epsilon, self.hidden_layers])
 
-    def test(self, n_test_runs: int = 10) -> None:
-        """Test the current network to check how well the networks trained."""
-        steps: np.ndarray = np.zeros(n_test_runs)
-        rewards: np.ndarray = np.zeros(n_test_runs)
-        for t in range(n_test_runs):
-            steps[t], rewards[t] = self.step(collect=False, testing=True)
+        # Environment
+        self.env = DroneEnv(self.episode_max_steps)
 
-        self.get_logger().warn('---------- TEST RUN RESULTS ----------')
-        self.get_logger().warn(f'Average: {steps.mean()}')
-        self.get_logger().warn(f'STD: {steps.std()}')
-        self.get_logger().warn(f'Median: {np.median(steps)}')
-        self.get_logger().warn(f'Average Reward: {rewards.mean()}')
+        # Model
+        if policy_type == 'PPO':
+            self.model = PPO.load(os.path.join(self.input_folder, 'rl_model'))
+        else:
+            print("ERROR: Invalid policy: %s" % policy_type)
 
-    def load_model(self) -> None:
-        self._policy.load_model(self.input_folder)
+    def test(self, n_test = 10):
+        ris = evaluate_policy(model = self.model, 
+                              env = self.env,
+                              n_eval_episodes = n_test,
+                              deterministic = True,
+                              render = False, # render is always false, because is taken care of by gzclient
+                              return_episode_rewards = True) # if True -> return the rewards of all the episodes
+
+        print('---------- TEST RUN RESULTS ----------')
+        print(f'Ris: {ris}')
+
 
 
 def main():
-    """Start the Worker Node."""
-    rclpy.init()
-
     input_folder = sys.argv[1]
     policy_type = sys.argv[2]
+    params_file = sys.argv[3]
     try:
-        n_test = int(sys.argv[3])
+        n_test = int(sys.argv[4])
     except:
         n_test = 10
 
-    node = Tester('tester_node', input_folder, policy_type)
-
-    node.load_model()
-
     try:
-        node.test(n_test)
+        params = {}
+        with open(params_file, 'r') as stream:
+            try:
+                params = yaml.safe_load(stream)
+                params = params["tester_node"]
+            except yaml.YAMLError as exc:
+                print(exc)
+
+        tester = Tester(input_folder, policy_type, params)
+        tester.test(n_test)
+
+        print("-----FINITO!!!!!------------------------------")
     except KeyboardInterrupt:
         pass
-
-    # Destroy the node explicitly
-    node.destroy_node()
-    rclpy.shutdown()
 
 
 if __name__ == '__main__':

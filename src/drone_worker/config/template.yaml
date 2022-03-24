@@ -12,15 +12,10 @@ worker_node:
 tester_node:
     use_gpu: True
     number:
-        states: 12
-        actions: 6
-        iterations: 300 #4000
+        episode_max_steps: 300
         episodes: 10000
     hyperparameter:
         lr: 0.007
         gamma: 0.99
         epsilon: 0.5
-    database:
-        local_size: 10000
-    decay_rate: 1
     hidden_layers: [64,64]
