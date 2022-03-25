@@ -2,8 +2,6 @@ import os
 import sys
 import yaml
 
-import numpy as np
-
 from drone_worker.gazebo_env import DroneEnv
 
 from stable_baselines3 import PPO
