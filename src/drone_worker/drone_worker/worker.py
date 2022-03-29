@@ -2,6 +2,8 @@ import os
 import sys
 import yaml
 
+import torch as th
+
 from drone_worker.gazebo_env import DroneEnv
 
 from stable_baselines3 import PPO
@@ -76,13 +78,18 @@ class Worker():
         self.save_callback = SaveModelCallback(save_skip=10 * self.episode_max_steps, log_dir=self.output_folder)
         # Model
         if policy_type == 'PPO':
+            # arguments passed to the network
+            policy_kwargs = dict(activation_fn=th.nn.Tanh,
+                                 net_arch=[dict(pi=self.hidden_layers, vf=self.hidden_layers)])
+
             self.model = PPO("MlpPolicy", 
                              env = self.env,
                              learning_rate = self.lr, 
                              n_steps = self.episode_max_steps,
                              batch_size = 100,
                              verbose = 1,
-                             tensorboard_log = "./tensorboard-test/") # TODO: aggiungere parametri
+                             tensorboard_log = "./tensorboard-test/",
+                             policy_kwargs = policy_kwargs) # TODO: aggiungere parametri
         else:
             print("ERROR: Invalid policy: %s" % policy_type)
 
