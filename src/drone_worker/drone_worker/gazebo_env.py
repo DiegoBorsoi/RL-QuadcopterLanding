@@ -108,6 +108,9 @@ class DroneEnv(gym.Env):
         self.done_flag = False
         self.reset_flag = False
 
+        self.reward_multiplier = 10
+        self.reward_penalty = 500
+
         # ROS stuff -------------------------------------------------------------------------------
 
         # Create a subscriber
@@ -182,9 +185,6 @@ class DroneEnv(gym.Env):
 
         done = self.done_flag or self.reset_flag
 
-        #observation = np.zeros(self.n_states)
-        #reward = 1
-        #done = False
         info = {}
         return observation, reward, done, info
 
@@ -364,24 +364,31 @@ class DroneEnv(gym.Env):
 
     def calculate_reward(self):
 
-        dist_eucl_pos = math.fabs(
+        dist_eucl_pos = math.sqrt(
             (self.last_odom_pos[0] - self.platform_center[0]) ** 2 + 
             (self.last_odom_pos[1] - self.platform_center[1]) ** 2 + 
             (self.last_odom_pos[2] - self.platform_center[2]) ** 2)
+        # normalization to (0, 1)
+        dist_eucl_pos = dist_eucl_pos / math.sqrt(2 * (self.horizontal_bound ** 2) + self.vertical_bound ** 2)
 
-        dist_eucl_vel = math.fabs(
+        dist_eucl_vel = math.sqrt(
             (self.last_odom_vel_linear[0]) ** 2 + 
             (self.last_odom_vel_linear[1]) ** 2 + 
             (self.last_odom_vel_linear[2]) ** 2)
+        # normalization to (0, 1)
+        dist_eucl_vel = dist_eucl_vel / math.sqrt(2 * (self.max_horizontal_vel ** 2) + self.max_vertical_vel ** 2)
 
-        dist_eucl_rot = math.fabs(
+        dist_eucl_rot = math.sqrt(
             (self.last_odom_rot[0] - self.platform_rot[0]) ** 2 + 
             (self.last_odom_rot[1] - self.platform_rot[1]) ** 2)
+        # normalization to (0, 1)
+        dist_eucl_rot = dist_eucl_rot / (math.sqrt(2) * self.max_delta_roll_pitch)
 
         reward = - dist_eucl_pos - 0.2 * dist_eucl_vel - 0.1 * dist_eucl_rot
+        reward *= self.reward_multiplier
 
         if self.reset_flag:
-            reward += -500.0
+            reward += -self.reward_penalty
         
         return reward
 
