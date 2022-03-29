@@ -37,9 +37,35 @@ class DroneEnv(gym.Env):
         # actions: Front, Back, Left, Right, Down, Up
         self.action_space = spaces.Discrete(self.n_actions)
 
+        # bound parameters
+        self.vertical_bound = 4.0       # bound from 0 to +val
+        self.horizontal_bound = 5.0     # bound from -val to +val
+
+        self.spawn_bound_half_side = 1.5
+        self.spawn_vertical_min = 2.0
+        self.spawn_vertical_max = 3.0
+
+        # plugin parameters used for normalization
+        self.platform_center = [0.0, 0.0, 0.2 + 0.1] # 0.1 represent half height 
+
+        self.max_laser_angle = np.pi/12
+
+        self.max_roll_pitch = np.pi/6 + 0.011 # this value correspond to a upperbound of the rotation step used in the plugin
+
+        self.plugin_hover_vel = 0.294
+        self.max_horizontal_vel = np.sin(self.max_roll_pitch) * self.plugin_hover_vel * 2
+        self.max_vertical_vel = 0.055
+
+        self.max_platform_rot = np.pi/12
+        self.max_delta_roll_pitch = self.max_roll_pitch + self.max_platform_rot
+
+        self.max_delta_vertical = self.vertical_bound - self.platform_center[2] + np.sin(self.max_platform_rot) * 1 # 1 represent half of the platform side
+        # this value represent the max min value read by the lasers, it's used in certain cases to calculate delta_z
+        self.max_laser_vertical_length = self.max_delta_vertical / np.cos(self.max_laser_angle)
+
         # states: roll, pitch, v_x, v_y, v_z, OUT_F, OUT_B, OUT_L, OUT_R, Delta_roll, Delta_pitch, Delta_z
-        low =  [-np.pi/4, -np.pi/4, -1, -1, -1, 0, 0, 0, 0,     0,     0,     0]
-        high = [ np.pi/4,  np.pi/4,  1,  1,  1, 1, 1, 1, 1, np.pi, np.pi, np.pi]
+        low =  [-1, -1, -1, -1, -1, 0, 0, 0, 0, -1, -1, 0]
+        high = [ 1,  1,  1,  1,  1, 1, 1, 1, 1,  1,  1, 1]
         self.observation_space = spaces.Box(
             low=np.array(low), 
             high=np.array(high), 
@@ -75,8 +101,6 @@ class DroneEnv(gym.Env):
         self.laser_updated = False
 
         self.platform_rot = [0.0, 0.0]
-
-        self.spawn_bound_half_side = 1.5
 
         self.step_count = 0
         self.run_max_steps = episode_max_steps
@@ -170,7 +194,7 @@ class DroneEnv(gym.Env):
 
         initial_pose.position.x = random.uniform(-self.spawn_bound_half_side, self.spawn_bound_half_side)
         initial_pose.position.y = random.uniform(-self.spawn_bound_half_side, self.spawn_bound_half_side)
-        initial_pose.position.z = random.uniform(2, 3)
+        initial_pose.position.z = random.uniform(self.spawn_vertical_min, self.spawn_vertical_max)
 
         # remove model if present and reset world and simulation
         self.pause_physics()
@@ -212,11 +236,19 @@ class DroneEnv(gym.Env):
             rclpy.spin_once(self.node)
 
         #self.print_odom_and_laser() # TODO: remove (only for testing)
-        
-        return self.get_state()
+
+        state = self.get_state()
+        return state
 
     def get_state(self):
-        s = [self.last_odom_rot[0], self.last_odom_rot[1]] + self.last_odom_vel_linear
+        # normalize roll and pitch values
+        s = [self.last_odom_rot[0] / self.max_roll_pitch, 
+             self.last_odom_rot[1] / self.max_roll_pitch]
+        
+        # normalize velocity values
+        s += [self.last_odom_vel_linear[0] / self.max_horizontal_vel, 
+              self.last_odom_vel_linear[1] / self.max_horizontal_vel, 
+              np.clip(self.last_odom_vel_linear[2] / self.max_vertical_vel, -1, 1)]
 
         out_front = self.last_laserscan_rays[8] == math.inf
         out_back = self.last_laserscan_rays[2] == math.inf
@@ -230,7 +262,7 @@ class DroneEnv(gym.Env):
         delta_roll = 0
         if s[0] > 0: # inclined in the leftward direction
             if out_left + (self.last_laserscan_rays[5] == math.inf) + out_right > 1:
-                delta_roll = math.pi / 2
+                delta_roll = self.max_delta_roll_pitch
             elif out_left:
                 right_laser = self.last_laserscan_rays[5] / math.cos(laser_angle)
                 remaining_right_laser = self.last_laserscan_rays[4] - right_laser
@@ -244,7 +276,7 @@ class DroneEnv(gym.Env):
                 delta_roll = math.atan((self.last_laserscan_rays[5] - central_laser) / laser_paral_dist) 
         elif s[0] < 0: # inclined in the rightward direction
             if out_left + (self.last_laserscan_rays[5] == math.inf) + out_right > 1:
-                delta_roll = -math.pi / 2
+                delta_roll = -self.max_delta_roll_pitch
             elif out_right:
                 left_laser = self.last_laserscan_rays[5] / math.cos(laser_angle)
                 remaining_left_laser = self.last_laserscan_rays[6] - left_laser
@@ -260,7 +292,7 @@ class DroneEnv(gym.Env):
         delta_pitch = 0
         if s[1] > 0: # inclined in the forward direction
             if out_front + (self.last_laserscan_rays[5] == math.inf) + out_back > 1:
-                delta_pitch = math.pi / 2
+                delta_pitch = self.max_delta_roll_pitch
             elif out_front:
                 back_laser = self.last_laserscan_rays[5] / math.cos(laser_angle)
                 remaining_back_laser = self.last_laserscan_rays[2] - back_laser
@@ -274,7 +306,7 @@ class DroneEnv(gym.Env):
                 delta_pitch = math.atan((self.last_laserscan_rays[5] - central_laser) / laser_paral_dist) 
         elif s[1] < 0: # inclined in the backward direction
             if out_front + (self.last_laserscan_rays[5] == math.inf) + out_back > 1:
-                delta_pitch = -math.pi / 2
+                delta_pitch = -self.max_delta_roll_pitch
             elif out_back:
                 front_laser = self.last_laserscan_rays[5] / math.cos(laser_angle)
                 remaining_front_laser = self.last_laserscan_rays[8] - front_laser
@@ -287,7 +319,8 @@ class DroneEnv(gym.Env):
                 laser_paral_dist = self.last_laserscan_rays[2] * math.sin(laser_angle)
                 delta_pitch = -math.atan((self.last_laserscan_rays[5] - central_laser) / laser_paral_dist) 
 
-        s += [delta_roll, delta_pitch]
+        s += [delta_roll / self.max_delta_roll_pitch, 
+              delta_pitch / self.max_delta_roll_pitch]
 
         delta_z = min(self.last_laserscan_rays)
         if not (self.last_laserscan_rays[5] == math.inf):
@@ -298,7 +331,7 @@ class DroneEnv(gym.Env):
         if delta_z == math.inf:
             delta_z = self.last_odom_pos[2]
 
-        s += [delta_z]
+        s += [delta_z / self.max_delta_vertical]
 
         self.odom_updated = False
         self.laser_updated = False
@@ -330,12 +363,11 @@ class DroneEnv(gym.Env):
         return a
 
     def calculate_reward(self):
-        platform_center = [0.0, 0.0, 0.2 + 0.1]
 
         dist_eucl_pos = math.fabs(
-            (self.last_odom_pos[0] - platform_center[0]) ** 2 + 
-            (self.last_odom_pos[1] - platform_center[1]) ** 2 + 
-            (self.last_odom_pos[2] - platform_center[2]) ** 2)
+            (self.last_odom_pos[0] - self.platform_center[0]) ** 2 + 
+            (self.last_odom_pos[1] - self.platform_center[1]) ** 2 + 
+            (self.last_odom_pos[2] - self.platform_center[2]) ** 2)
 
         dist_eucl_vel = math.fabs(
             (self.last_odom_vel_linear[0]) ** 2 + 
@@ -384,11 +416,10 @@ class DroneEnv(gym.Env):
 
         self.odom_updated = True
 
-        horizontal_bound = 5.0
         # position limits, the drone can't go too far away
-        x_limit = obs_state_vector_x_y_z[0] > horizontal_bound or obs_state_vector_x_y_z[0] < -horizontal_bound
-        y_limit = obs_state_vector_x_y_z[1] > horizontal_bound or obs_state_vector_x_y_z[1] < -horizontal_bound
-        z_limit = obs_state_vector_x_y_z[2] > 4.0 or obs_state_vector_x_y_z[2] < 0.0
+        x_limit = obs_state_vector_x_y_z[0] > self.horizontal_bound or obs_state_vector_x_y_z[0] < -self.horizontal_bound
+        y_limit = obs_state_vector_x_y_z[1] > self.horizontal_bound or obs_state_vector_x_y_z[1] < -self.horizontal_bound
+        z_limit = obs_state_vector_x_y_z[2] > self.vertical_bound or obs_state_vector_x_y_z[2] < 0.0
         if x_limit or y_limit or z_limit:
             self.reset_flag = True
 
