@@ -260,7 +260,7 @@ class DroneEnv(gym.Env):
         laser_angle = math.pi / 12
 
         delta_roll = 0
-        if s[0] > 0: # inclined in the leftward direction
+        if self.last_odom_rot[0] > 0: # inclined in the leftward direction
             if out_left + (self.last_laserscan_rays[5] == math.inf) + out_right > 1:
                 delta_roll = self.max_delta_roll_pitch
             elif out_left:
@@ -274,7 +274,7 @@ class DroneEnv(gym.Env):
                 central_laser = self.last_laserscan_rays[6] * math.cos(laser_angle)
                 laser_paral_dist = self.last_laserscan_rays[6] * math.sin(laser_angle)
                 delta_roll = math.atan((self.last_laserscan_rays[5] - central_laser) / laser_paral_dist) 
-        elif s[0] < 0: # inclined in the rightward direction
+        elif self.last_odom_rot[0] < 0: # inclined in the rightward direction
             if out_left + (self.last_laserscan_rays[5] == math.inf) + out_right > 1:
                 delta_roll = -self.max_delta_roll_pitch
             elif out_right:
@@ -290,7 +290,7 @@ class DroneEnv(gym.Env):
                 delta_roll = -math.atan((self.last_laserscan_rays[5] - central_laser) / laser_paral_dist) 
 
         delta_pitch = 0
-        if s[1] > 0: # inclined in the forward direction
+        if self.last_odom_rot[1] > 0: # inclined in the forward direction
             if out_front + (self.last_laserscan_rays[5] == math.inf) + out_back > 1:
                 delta_pitch = self.max_delta_roll_pitch
             elif out_front:
@@ -304,7 +304,7 @@ class DroneEnv(gym.Env):
                 central_laser = self.last_laserscan_rays[8] * math.cos(laser_angle)
                 laser_paral_dist = self.last_laserscan_rays[8] * math.sin(laser_angle)
                 delta_pitch = math.atan((self.last_laserscan_rays[5] - central_laser) / laser_paral_dist) 
-        elif s[1] < 0: # inclined in the backward direction
+        elif self.last_odom_rot[1] < 0: # inclined in the backward direction
             if out_front + (self.last_laserscan_rays[5] == math.inf) + out_back > 1:
                 delta_pitch = -self.max_delta_roll_pitch
             elif out_back:
@@ -324,7 +324,7 @@ class DroneEnv(gym.Env):
 
         delta_z = min(self.last_laserscan_rays)
         if not (self.last_laserscan_rays[5] == math.inf):
-            delta_z = math.fabs(self.last_laserscan_rays[5] * math.cos(s[0]) * math.cos(s[1]))
+            delta_z = math.fabs(self.last_laserscan_rays[5] * math.cos(self.last_odom_rot[0]) * math.cos(self.last_odom_rot[1]))
 
         # if we are completely out of the platform, we use the world value, 
         # in the real world this would be a gps value
