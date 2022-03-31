@@ -240,6 +240,7 @@ class DroneEnv(gym.Env):
         #self.print_odom_and_laser() # TODO: remove (only for testing)
 
         state = self.get_state()
+        #self.node.get_logger().info("State: %s" % state)
         return state
 
     def get_state(self):
@@ -392,6 +393,7 @@ class DroneEnv(gym.Env):
         if self.reset_flag:
             reward += -self.reward_penalty
         
+        #self.node.get_logger().info("Rewards: tot %s, singoli: %s, %s, %s" % (reward, dist_eucl_pos, dist_eucl_vel, dist_eucl_rot))
         return reward
 
     # ---------------------------------------------------------------------------------------------
