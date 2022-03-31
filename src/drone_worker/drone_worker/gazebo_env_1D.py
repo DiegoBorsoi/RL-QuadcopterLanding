@@ -390,9 +390,9 @@ class DroneEnv1D(gym.Env):
         while rclpy.ok():
             if srv_call.done():
                 self.node.get_logger().info('Spawn status: Successfull')
-                break
+                return
             rclpy.spin_once(self.node)
-        #return srv_call.result().success
+        self.node.get_logger().error('Call to /spawn_entity failed.')
 
     def delete_entity(self):
         req = DeleteEntity.Request()
@@ -402,45 +402,45 @@ class DroneEnv1D(gym.Env):
         while rclpy.ok():
             if srv_call.done():
                 self.node.get_logger().info('Delete status: Successfull')
-                break
+                return
             rclpy.spin_once(self.node)
-        #return srv_call.result().success
+        self.node.get_logger().error('Call to /delete_entity failed.')
 
     def unpause_physics(self):
         srv_call = self.client_unpause.call_async(Empty.Request())
         while rclpy.ok():
             if srv_call.done():
                 self.node.get_logger().info('Unpause physics status: done')
-                break
+                return
             rclpy.spin_once(self.node)
-        #return True
+        self.node.get_logger().error('Call to /unpause_physics failed.')
 
     def pause_physics(self):
         srv_call = self.client_pause.call_async(Empty.Request())
         while rclpy.ok():
             if srv_call.done():
                 self.node.get_logger().info('Pause physics status: done')
-                break
+                return
             rclpy.spin_once(self.node)
-        #return True
+        self.node.get_logger().error('Call to /pause_physics failed.')
 
     def reset_sim(self):
         srv_call = self.client_resetsim.call_async(Empty.Request())
         while rclpy.ok():
             if srv_call.done():
                 self.node.get_logger().info('Reset simulation status: done')
-                break
+                return
             rclpy.spin_once(self.node)
-        #return True
+        self.node.get_logger().error('Call to /reset_sim failed.')
 
     def reset_world(self):
         srv_call = self.client_resetwrld.call_async(Empty.Request())
         while rclpy.ok():
             if srv_call.done():
                 self.node.get_logger().info('Reset world status: done')
-                break
+                return
             rclpy.spin_once(self.node)
-        #return True
+        self.node.get_logger().error('Call to /reset_world failed.')
 
     # ---------------------------------------------------------------------------------------------
     # --- Utilities funcions ----------------------------------------------------------------------
