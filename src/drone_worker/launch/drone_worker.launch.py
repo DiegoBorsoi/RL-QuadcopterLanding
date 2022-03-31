@@ -65,6 +65,11 @@ def generate_launch_description():
             default_value=['False'],
             description='Condition to check for having the moving platform (default stationary).'
         ),
+        DeclareLaunchArgument(
+            'dimensions',
+            default_value=['3'],
+            description='Number of dimensions in which the drone can operate (default 3).'
+        ),
         Node(
             package='drone_worker',
             executable='train_drone',
@@ -75,6 +80,7 @@ def generate_launch_description():
                 LaunchConfiguration('output_folder'),
                 LaunchConfiguration('policy_type'),
                 LaunchConfiguration('param_file'),
+                LaunchConfiguration('dimensions'),
             ]
         ),
         ExecuteProcess(

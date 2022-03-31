@@ -4,6 +4,7 @@ import yaml
 
 import torch as th
 
+from drone_worker.gazebo_env_1D import DroneEnv1D
 from drone_worker.gazebo_env import DroneEnv
 
 from stable_baselines3 import PPO
@@ -52,7 +53,8 @@ class Worker():
                       "hyperparameter": {"lr": 0.007,
                                          "gamma": 0.99,
                                          "epsilon": 1.0},
-                      "hidden_layers": [64, 64]}) -> None:
+                      "hidden_layers": [64, 64]},
+            dimensions: int = 3) -> None:
 
         # Set the output file for final model.
         self.output_folder = output_folder
@@ -69,7 +71,12 @@ class Worker():
         print("Params: %s" % [self.episode_max_steps, self.episodes_number, self.lr, self.gamma, self.epsilon, self.hidden_layers])
 
         # Environment
-        self.env = DroneEnv(self.episode_max_steps)
+        if dimensions == 1:
+            self.env = DroneEnv1D(self.episode_max_steps)
+        elif dimensions == 2:
+            self.env = DroneEnv1D(self.episode_max_steps) # TODO: sistemare 2D
+        else:
+            self.env = DroneEnv(self.episode_max_steps)
 
         #print("Obs space: %s" % self.env.observation_space)
         #print("Action space: %s" % self.env.action_space)
@@ -103,6 +110,7 @@ def main():
     output_folder = sys.argv[1]
     policy_type = sys.argv[2]
     params_file = sys.argv[3]
+    dimensions = int(sys.argv[4])
 
     try:
         params = {}
@@ -113,7 +121,7 @@ def main():
             except yaml.YAMLError as exc:
                 print(exc)
 
-        worker = Worker(output_folder, policy_type, params)
+        worker = Worker(output_folder, policy_type, params, dimensions)
 
         worker.learn()
         print("-----FINITO!!!!!------------------------------")
