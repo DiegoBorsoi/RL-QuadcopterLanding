@@ -177,12 +177,14 @@ class DroneEnv(gym.Env):
         # get new observation state
         observation = self.wait_and_get_obs()
 
-        reward = self.calculate_reward()
-
         # check if we reached the max number of step in a run
         if self.step_count >= self.run_max_steps:
             self.reset_flag = True
 
+        # calculate the reward of the current observation state
+        reward = self.calculate_reward()
+
+        # calculate the done flag
         done = self.done_flag or self.reset_flag
 
         info = {}

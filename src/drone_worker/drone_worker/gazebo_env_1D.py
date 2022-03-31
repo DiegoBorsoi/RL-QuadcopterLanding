@@ -177,12 +177,14 @@ class DroneEnv1D(gym.Env):
         # get new observation state
         observation = self.wait_and_get_obs()
 
-        reward = self.calculate_reward()
-
         # check if we reached the max number of step in a run
         if self.step_count >= self.run_max_steps:
             self.reset_flag = True
 
+        # calculate the reward of the current observation state
+        reward = self.calculate_reward()
+
+        # calculate the done flag
         done = self.done_flag or self.reset_flag
 
         info = {}
@@ -291,7 +293,7 @@ class DroneEnv1D(gym.Env):
         if self.reset_flag:
             reward += -self.reward_penalty
         
-        self.node.get_logger().info("Rewards: tot %s, singoli: %s, %s" % (reward, dist_eucl_pos, dist_eucl_vel))
+        #self.node.get_logger().info("Rewards: tot %s, singoli: %s, %s" % (reward, dist_eucl_pos, dist_eucl_vel))
         return reward
 
     # ---------------------------------------------------------------------------------------------
