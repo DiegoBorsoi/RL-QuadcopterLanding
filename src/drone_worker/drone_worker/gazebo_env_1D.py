@@ -172,6 +172,8 @@ class DroneEnv1D(gym.Env):
         # -----------------------------------------------------------------------------------------
 
     def step(self, action):
+        self.step_count += 1
+
         self.execute_action(self.translate_action(action))
 
         # get new observation state
