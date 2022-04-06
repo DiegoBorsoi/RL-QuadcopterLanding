@@ -5,6 +5,7 @@ import yaml
 import torch as th
 
 from drone_worker.gazebo_env_1D import DroneEnv1D
+from drone_worker.gazebo_env_2D import DroneEnv2D
 from drone_worker.gazebo_env import DroneEnv
 
 from stable_baselines3 import PPO
@@ -74,7 +75,7 @@ class Worker():
         if dimensions == 1:
             self.env = DroneEnv1D(self.episode_max_steps)
         elif dimensions == 2:
-            self.env = DroneEnv1D(self.episode_max_steps) # TODO: sistemare 2D
+            self.env = DroneEnv2D(self.episode_max_steps)
         else:
             self.env = DroneEnv(self.episode_max_steps)
 
