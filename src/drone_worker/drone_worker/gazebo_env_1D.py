@@ -250,7 +250,7 @@ class DroneEnv1D(gym.Env):
         # normalize vertical velocity value
         s = [np.clip(self.last_odom_vel_linear[2] / self.max_vertical_vel, -1, 1)]
 
-        delta_z = self.last_laserscan_rays[5]
+        delta_z = self.last_laserscan_rays[4]
 
         # if we are completely out of the platform, we use the world value, 
         # in the real world this would be a gps value
