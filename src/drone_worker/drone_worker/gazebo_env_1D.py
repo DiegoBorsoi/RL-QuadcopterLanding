@@ -109,7 +109,7 @@ class DroneEnv1D(gym.Env):
         self.reset_flag = False
 
         self.reward_multiplier = 10
-        self.reward_penalty = 500
+        self.reward_penalty = 2 * self.run_max_steps
 
         # ROS stuff -------------------------------------------------------------------------------
 
@@ -175,6 +175,7 @@ class DroneEnv1D(gym.Env):
         self.step_count += 1
 
         self.execute_action(self.translate_action(action))
+        #self.node.get_logger().info("Action: %s" % action)
 
         # get new observation state
         observation = self.wait_and_get_obs()
@@ -289,11 +290,14 @@ class DroneEnv1D(gym.Env):
         # normalization to (0, 1)
         dist_eucl_vel = dist_eucl_vel / self.max_vertical_vel
 
+        # combine the 3 rewards
         reward = - dist_eucl_pos - 0.2 * dist_eucl_vel
-        reward *= self.reward_multiplier
 
         if self.reset_flag:
             reward += -self.reward_penalty
+
+        # multiply for a given value, needed only for more "easy to read" values
+        reward *= self.reward_multiplier
         
         #self.node.get_logger().info("Rewards: tot %s, singoli: %s, %s" % (reward, dist_eucl_pos, dist_eucl_vel))
         return reward
