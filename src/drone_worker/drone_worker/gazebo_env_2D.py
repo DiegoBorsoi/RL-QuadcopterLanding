@@ -80,7 +80,7 @@ class DroneEnv2D(gym.Env):
 
         # --- Gazebo collector stuff --------------------------------------------------------------
         # Get path to the quadrotor
-        sdf_file_path = os.path.join(get_package_share_directory("drone_worker"), "models", "quadrotor_v2", "model.sdf")
+        sdf_file_path = os.path.join(get_package_share_directory("drone_worker"), "models", "quadrotor_laser", "model.sdf")
 
         try:
             self.model = open(sdf_file_path, 'r').read()

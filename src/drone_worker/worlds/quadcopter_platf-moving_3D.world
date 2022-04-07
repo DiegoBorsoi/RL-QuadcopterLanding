@@ -37,7 +37,7 @@
     </gui>
     <!-- A simple platform -->
     <include>
-      <uri>model://platform</uri>
+      <uri>model://platform_mov2</uri>
       <pose>0 0 0.2 0 0 0</pose>
     </include>
   </world>

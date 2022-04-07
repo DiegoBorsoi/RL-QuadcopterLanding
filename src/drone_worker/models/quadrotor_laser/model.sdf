@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.7'>
-  <model name='quadrotor_v2'>
+  <model name='quadrotor_laser'>
     <link name='link'>
       <pose>0 0 0.182466 0 0 0</pose>
       <inertial>
@@ -18,7 +18,7 @@
       <visual name='visual'>
         <geometry>
           <mesh>
-            <uri>model://quadrotor_v2/quadrotor_base.dae</uri>
+            <uri>model://quadrotor_laser/quadrotor_base.dae</uri>
           </mesh>
         </geometry>
         <pose>0 0 0 0 0 -0.785398</pose>
@@ -27,7 +27,7 @@
         <pose>0 0 0 0 0 -0.785398</pose>
         <geometry>
           <mesh>
-            <uri>model://quadrotor_v2/quadrotor_base.dae</uri>
+            <uri>model://quadrotor_laser/quadrotor_base.dae</uri>
             <scale>1 1 1</scale>
           </mesh>
         </geometry>

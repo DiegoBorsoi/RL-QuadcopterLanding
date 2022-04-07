@@ -11,7 +11,7 @@ from launch.actions import DeclareLaunchArgument
 from launch.actions import ExecuteProcess
 from launch.conditions import IfCondition
 from launch.conditions import UnlessCondition
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
 
 def get_param_file(file_name: str):
@@ -27,11 +27,14 @@ def generate_launch_description():
     pkg_dir = get_package_share_directory('drone_worker')
     os.environ["GAZEBO_MODEL_PATH"] = os.path.join(pkg_dir, 'models')
 
-    world_file_name = 'quadcopter.world'
-    world = os.path.join(pkg_dir, 'worlds', world_file_name)
+    world_file_name_stat = 'quadcopter_platf-stat.world'
+    world_stat = os.path.join(pkg_dir, 'worlds', world_file_name_stat)
 
-    world_file_name2 = 'quadcopter2.world'
-    world2 = os.path.join(pkg_dir, 'worlds', world_file_name2)
+    world_file_name_mov2D = 'quadcopter_platf-moving_2D.world'
+    world_mov2D = os.path.join(pkg_dir, 'worlds', world_file_name_mov2D)
+
+    world_file_name_mov3D = 'quadcopter_platf-moving_3D.world'
+    world_mov3D = os.path.join(pkg_dir, 'worlds', world_file_name_mov3D)
 
     """Launch file for training."""
     return LaunchDescription([
@@ -90,20 +93,57 @@ def generate_launch_description():
             ]
         ),
         ExecuteProcess(
-            cmd=['gzserver', '--verbose', world,'-s', 'libgazebo_ros_init.so',
-                                                '-s', 'libgazebo_ros_factory.so',
-                                                #'-s', 'libgazebo_ros_force_system.so',
-                                                '--pause'],
+            cmd=['gzserver', '--verbose', world_stat,
+                             '-s', 'libgazebo_ros_init.so',
+                             '-s', 'libgazebo_ros_factory.so',
+                             #'-s', 'libgazebo_ros_force_system.so',
+                             '--pause'],
             output='screen',
-            condition=UnlessCondition(LaunchConfiguration('moving_platform'))
+            condition=IfCondition(PythonExpression([LaunchConfiguration('dimensions'), ' == 1']))
         ),
         ExecuteProcess(
-            cmd=['gzserver', '--verbose', world2,'-s', 'libgazebo_ros_init.so',
-                                                '-s', 'libgazebo_ros_factory.so',
-                                                #'-s', 'libgazebo_ros_force_system.so',
-                                                '--pause'],
+            cmd=['gzserver', '--verbose', world_stat,
+                             '-s', 'libgazebo_ros_init.so',
+                             '-s', 'libgazebo_ros_factory.so',
+                             #'-s', 'libgazebo_ros_force_system.so',
+                             '--pause'],
             output='screen',
-            condition=IfCondition(LaunchConfiguration('moving_platform'))
+            condition=IfCondition(PythonExpression([LaunchConfiguration('dimensions'), ' == 2'
+                                                    ' and ',
+                                                    LaunchConfiguration('moving_platform'), ' == False']))
+        ),
+        ExecuteProcess(
+            cmd=['gzserver', '--verbose', world_stat,
+                             '-s', 'libgazebo_ros_init.so',
+                             '-s', 'libgazebo_ros_factory.so',
+                             #'-s', 'libgazebo_ros_force_system.so',
+                             '--pause'],
+            output='screen',
+            condition=IfCondition(PythonExpression([LaunchConfiguration('dimensions'), ' == 3'
+                                                    ' and ',
+                                                    LaunchConfiguration('moving_platform'), ' == False']))
+        ),
+        ExecuteProcess(
+            cmd=['gzserver', '--verbose', world_mov2D,
+                             '-s', 'libgazebo_ros_init.so',
+                             '-s', 'libgazebo_ros_factory.so',
+                             #'-s', 'libgazebo_ros_force_system.so',
+                             '--pause'],
+            output='screen',
+            condition=IfCondition(PythonExpression([LaunchConfiguration('dimensions'), ' == 2'
+                                                    ' and ',
+                                                    LaunchConfiguration('moving_platform')]))
+        ),
+        ExecuteProcess(
+            cmd=['gzserver', '--verbose', world_mov3D,
+                             '-s', 'libgazebo_ros_init.so',
+                             '-s', 'libgazebo_ros_factory.so',
+                             #'-s', 'libgazebo_ros_force_system.so',
+                             '--pause'],
+            output='screen',
+            condition=IfCondition(PythonExpression([LaunchConfiguration('dimensions'), ' == 3'
+                                                    ' and ',
+                                                    LaunchConfiguration('moving_platform')]))
         ),
         ExecuteProcess(
             cmd=['gzclient', '--verbose'],
