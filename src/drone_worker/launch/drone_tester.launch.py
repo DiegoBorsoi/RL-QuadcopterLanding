@@ -66,6 +66,11 @@ def generate_launch_description():
             description='Condition to check for having the moving platform (default stationary).'
         ),
         DeclareLaunchArgument(
+            'dimensions',
+            default_value=['3'],
+            description='Number of dimensions in which the drone can operate (default 3).'
+        ),
+        DeclareLaunchArgument(
             'n_test',
             default_value=['10'],
             description='Number of test to execute.'
@@ -80,6 +85,7 @@ def generate_launch_description():
                 LaunchConfiguration('input_folder'),
                 LaunchConfiguration('policy_type'),
                 LaunchConfiguration('param_file'),
+                LaunchConfiguration('dimensions'),
                 LaunchConfiguration('n_test'),
             ]
         ),

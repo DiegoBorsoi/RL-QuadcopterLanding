@@ -2,6 +2,8 @@ import os
 import sys
 import yaml
 
+from drone_worker.gazebo_env_1D import DroneEnv1D
+from drone_worker.gazebo_env_2D import DroneEnv2D
 from drone_worker.gazebo_env import DroneEnv
 
 from stable_baselines3 import PPO
@@ -21,7 +23,8 @@ class Tester():
                       "hyperparameter": {"lr": 0.007,
                                          "gamma": 0.99,
                                          "epsilon": 1.0},
-                      "hidden_layers": [64, 64]}) -> None:
+                      "hidden_layers": [64, 64]},
+            dimensions: int = 3) -> None:
 
         # Set the output file for final model.
         self.input_folder = input_folder
@@ -38,7 +41,12 @@ class Tester():
         print("Params: %s" % [self.episode_max_steps, self.episodes_number, self.lr, self.gamma, self.epsilon, self.hidden_layers])
 
         # Environment
-        self.env = DroneEnv(self.episode_max_steps)
+        if dimensions == 1:
+            self.env = DroneEnv1D(self.episode_max_steps)
+        elif dimensions == 2:
+            self.env = DroneEnv2D(self.episode_max_steps)
+        else:
+            self.env = DroneEnv(self.episode_max_steps)
 
         # Model
         if policy_type == 'PPO':
@@ -63,8 +71,10 @@ def main():
     input_folder = sys.argv[1]
     policy_type = sys.argv[2]
     params_file = sys.argv[3]
+    dimensions = int(sys.argv[4])
+
     try:
-        n_test = int(sys.argv[4])
+        n_test = int(sys.argv[5])
     except:
         n_test = 10
 
@@ -77,7 +87,7 @@ def main():
             except yaml.YAMLError as exc:
                 print(exc)
 
-        tester = Tester(input_folder, policy_type, params)
+        tester = Tester(input_folder, policy_type, params, dimensions)
         tester.test(n_test)
 
         print("-----FINITO!!!!!------------------------------")
