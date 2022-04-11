@@ -98,8 +98,8 @@ class Worker():
                              batch_size = 100,
                              verbose = 1,
                              tensorboard_log = "./tensorboard-test/",
-                             policy_kwargs = policy_kwargs,
-                             seed = 12345) # TODO: aggiungere parametri
+                             #seed = 12345,
+                             policy_kwargs = policy_kwargs) # TODO: aggiungere parametri
         elif policy_type == 'DQN':
             # arguments passed to the network
             policy_kwargs = dict(activation_fn=th.nn.ReLU,      # default used by stable-baselines3
@@ -112,8 +112,8 @@ class Worker():
                              batch_size = 100,
                              verbose = 1,
                              tensorboard_log = "./tensorboard-test/",
-                             policy_kwargs = policy_kwargs,
-                             seed = 12345) # TODO: aggiungere parametri
+                             #seed = 12345,
+                             policy_kwargs = policy_kwargs) # TODO: aggiungere parametri
         else:
             print("ERROR: Invalid policy: %s" % policy_type)
 
