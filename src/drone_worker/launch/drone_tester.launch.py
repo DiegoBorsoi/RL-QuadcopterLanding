@@ -55,7 +55,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'policy_type',
-            default_value=['DQN'],
+            default_value=['PPO'],
             description='Policy worker will use for training.'
         ),
         DeclareLaunchArgument(
