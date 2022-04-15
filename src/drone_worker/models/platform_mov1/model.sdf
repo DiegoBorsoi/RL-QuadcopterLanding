@@ -3,14 +3,14 @@
   <model name='platform_mov1'>
     <link name='link_0'>
       <inertial>
-        <mass>3.12</mass>
+        <mass>1000</mass>
         <inertia>
-          <ixx>1.0504</ixx>
+          <ixx>336.667</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>1.0504</iyy>
+          <iyy>336.667</iyy>
           <iyz>0</iyz>
-          <izz>2.08</izz>
+          <izz>666.667</izz>
         </inertia>
         <pose>0 0 0 0 -0 0</pose>
       </inertial>

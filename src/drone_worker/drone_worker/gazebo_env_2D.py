@@ -214,6 +214,9 @@ class DroneEnv2D(gym.Env):
         self.spawn_entity(initial_pose)
         self.unpause_physics()
 
+        # wait for a little timer so the platform can start the rotation
+        time.sleep(1.0)
+
         # get new observation state
         observation = self.wait_and_get_obs()
 
