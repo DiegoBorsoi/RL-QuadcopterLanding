@@ -33,6 +33,13 @@
         </geometry>
       </collision>
 
+      <sensor name='my_contact' type='contact'>
+        <plugin name='contact_plugin' filename='libcontact_plugin.so'/>
+        <contact>
+          <collision>collision</collision>
+        </contact>
+      </sensor>
+
       <!-- Describes the type and properties of the sensor -->
       <sensor name="laser" type="ray">
         <always_on>1</always_on>
@@ -70,7 +77,7 @@
           <noise>
             <type>gaussian</type>
             <mean>0.0</mean>
-            <stddev>0.01</stddev>
+            <stddev>0.005</stddev>
           </noise>
         </ray>
       </sensor>

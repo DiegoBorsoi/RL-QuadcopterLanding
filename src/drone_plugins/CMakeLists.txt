@@ -52,6 +52,18 @@ ament_target_dependencies(laser_scan_plugin
 )
 ament_export_libraries(laser_scan_plugin)
 
+
+add_library(contact_plugin SHARED
+  src/contact_plugin.cc
+)
+ament_target_dependencies(contact_plugin
+  "gazebo_ros"
+  "gazebo_msgs"
+  "geometry_msgs"
+)
+ament_export_libraries(contact_plugin)
+
+
 add_library(platform_plugin_2D SHARED
   src/platform_plugin_2D.cc
 )
