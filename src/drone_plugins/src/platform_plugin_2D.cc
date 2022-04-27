@@ -126,6 +126,7 @@ namespace gazebo_plugins
 
     float pos_margin;
 
+    float ang_vel;
     float lin_vel;
   };
 
@@ -250,6 +251,7 @@ namespace gazebo_plugins
 
     impl_->pos_margin = 0.005f;
 
+    impl_->ang_vel = 0.001f;
     impl_->lin_vel = 0.01f;
 
 
@@ -323,10 +325,10 @@ namespace gazebo_plugins
       float z_ang_vel = 0;
       float current_yaw = static_cast<float>(pose.Rot().Yaw());
       if (current_yaw > rot_zero_margin){
-        z_ang_vel = - 0.001f;
+        z_ang_vel = - ang_vel;
       }
       else if (current_yaw < - rot_zero_margin){
-        z_ang_vel = 0.001f;
+        z_ang_vel = ang_vel;
       }
       
       model_->SetAngularVel(

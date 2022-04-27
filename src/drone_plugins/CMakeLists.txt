@@ -86,6 +86,15 @@ ament_target_dependencies(platform_plugin_1D
 )
 ament_export_libraries(platform_plugin_1D)
 
+add_library(platform_plugin_stat SHARED
+  src/platform_plugin_stat.cc
+)
+ament_target_dependencies(platform_plugin_stat
+  "gazebo_dev"
+  "gazebo_ros"
+)
+ament_export_libraries(platform_plugin_stat)
+
 
 
 ament_export_dependencies(rclcpp)

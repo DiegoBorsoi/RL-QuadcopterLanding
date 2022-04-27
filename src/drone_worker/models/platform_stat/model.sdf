@@ -3,19 +3,19 @@
   <model name='platform_stat'>
     <link name='link_0'>
       <inertial>
-        <mass>3.12</mass>
+        <mass>1000</mass>
         <inertia>
-          <ixx>1.0504</ixx>
+          <ixx>336.667</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>1.0504</iyy>
+          <iyy>336.667</iyy>
           <iyz>0</iyz>
-          <izz>2.08</izz>
+          <izz>666.667</izz>
         </inertia>
         <pose>0 0 0 0 -0 0</pose>
       </inertial>
       <pose>0 0 0 0 -0 0</pose>
-      <gravity>1</gravity>
+      <gravity>0</gravity>
       <self_collide>0</self_collide>
       <kinematic>0</kinematic>
       <enable_wind>0</enable_wind>
@@ -99,7 +99,10 @@
         </surface>
       </collision>
     </link>
-    <static>1</static>
+    <static>0</static>
     <allow_auto_disable>1</allow_auto_disable>
+
+    <plugin name="platform_plugin_stat" filename="libplatform_plugin_stat.so">
+    </plugin>
   </model>
 </sdf>
