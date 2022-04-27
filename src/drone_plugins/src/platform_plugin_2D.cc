@@ -237,7 +237,7 @@ namespace gazebo_plugins
     impl_->target_pitch = 0;
 
     impl_->max_rot = (M_PI / 12);
-    impl_->rot_steps = 500.0f;
+    impl_->rot_steps = 50.0f;
 
     impl_->rot_zero_margin = impl_->max_rot / (impl_->rot_steps / 2);
 
@@ -306,17 +306,17 @@ namespace gazebo_plugins
         // take a step to reach the target rotation
         if(! reached_target_roll){
           if(current_roll > target_roll){
-            x_ang_vel = - abs(target_roll / rot_steps);
+            x_ang_vel = - (abs(target_roll - current_roll) / rot_steps);
           }else if(current_roll < target_roll){
-            x_ang_vel = abs(target_roll / rot_steps);
+            x_ang_vel = (abs(target_roll - current_roll) / rot_steps);
           }
         }
 
         if(! reached_target_pitch){
           if(current_pitch > target_pitch){
-            y_ang_vel = - abs(target_pitch / rot_steps);
+            y_ang_vel = - (abs(target_pitch - current_pitch) / rot_steps);
           }else if(current_pitch < target_pitch){
-            y_ang_vel = abs(target_pitch / rot_steps);
+            y_ang_vel = (abs(target_pitch - current_pitch) / rot_steps);
           }
         }
       }
