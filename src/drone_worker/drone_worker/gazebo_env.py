@@ -16,6 +16,7 @@ from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Twist # Twist is linear and angular velocity
 from sensor_msgs.msg import LaserScan # LaserScan contains the value of the laser rays
 from nav_msgs.msg import Odometry # Position, orientation, linear velocity, angular velocity
+from gazebo_msgs.msg import ContactsState
 
 # Gazebo's services
 from gazebo_msgs.srv import SpawnEntity 
@@ -107,9 +108,11 @@ class DroneEnv(gym.Env):
 
         self.done_flag = False
         self.reset_flag = False
+        self.platform_touch = False
 
         self.reward_multiplier = 10
         self.reward_penalty = 2 * self.run_max_steps
+        self.reward_penalty_touch = self.run_max_steps
 
         # ROS stuff -------------------------------------------------------------------------------
 
@@ -126,6 +129,11 @@ class DroneEnv(gym.Env):
         self.laser_subscriber = self.node.create_subscription(LaserScan,
                                                                 '/' + self.quadcopter_namespace + '/laser',
                                                                 self.laser_callback,
+                                                                10)
+
+        self.contact_subscriber = self.node.create_subscription(ContactsState,
+                                                                '/' + self.quadcopter_namespace + '/contact_states',
+                                                                self.contact_callback,
                                                                 10)
 
         self.platform_subscriber = self.node.create_subscription(Odometry,
@@ -184,6 +192,10 @@ class DroneEnv(gym.Env):
         if self.step_count >= self.run_max_steps:
             self.reset_flag = True
 
+        # check if we are touching the platform, if so end the run
+        if self.platform_touch:
+            self.done_flag = True
+
         # calculate the reward of the current observation state
         reward = self.calculate_reward()
 
@@ -205,8 +217,8 @@ class DroneEnv(gym.Env):
         self.pause_physics()
         self.delete_entity()
         time.sleep(0.2)
-        self.reset_world()
-        self.reset_sim()
+        #self.reset_world()
+        #self.reset_sim()
 
         # spawn model in the new position and unpause physics
         self.spawn_entity(initial_pose)
@@ -221,6 +233,7 @@ class DroneEnv(gym.Env):
         self.step_count = 0
         self.done_flag = False
         self.reset_flag = False
+        self.platform_touch = False
 
         return observation
 
@@ -399,6 +412,10 @@ class DroneEnv(gym.Env):
         if self.reset_flag:
             reward += -self.reward_penalty
 
+        # if we are touching the platform, add a reward penalty if we are not on the same plane(roll pitch)
+        if self.platform_touch and (math.fabs(self.last_odom_rot[0] - self.platform_rot[0]) > 0.1 or math.fabs(self.last_odom_rot[1] - self.platform_rot[1]) > 0.1):
+            reward += -self.reward_penalty_touch
+
         # multiply for a given value, needed only for more "easy to read" values
         reward *= self.reward_multiplier
         
@@ -458,16 +475,9 @@ class DroneEnv(gym.Env):
         Y    |      2 1 0
         <----+      
         '''
-        platform_touch = False
-        for i in self.last_laserscan_rays:
-            if i < 0.1:
-                platform_touch = True
 
-        # if we are touching the platform, but we are not in the same plane (roll-pitch) of the platform
-        if platform_touch and (math.fabs(self.last_odom_rot[0] - self.platform_rot[0]) > 0.1 or math.fabs(self.last_odom_rot[1] - self.platform_rot[1]) > 0.1):
-            self.reset_flag = True
-        else:
-            self.done_flag = self.done_flag or platform_touch
+    def contact_callback(self, msg):
+        self.platform_touch |= len(list(msg.states)) > 0
 
     def platform_callback(self, msg):
         """
