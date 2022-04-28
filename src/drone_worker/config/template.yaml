@@ -4,9 +4,8 @@ worker_node:
         episode_max_steps: 300
         episodes: 10000
     hyperparameter:
-        lr: 0.007
+        lr: 0.0003
         gamma: 0.99
-        epsilon: 0.5
     hidden_layers: [64,64]
 
 tester_node:

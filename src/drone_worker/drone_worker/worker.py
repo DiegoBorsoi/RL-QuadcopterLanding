@@ -52,9 +52,8 @@ class Worker():
             policy_type: str = 'PPO',
             params = {"number": {"episode_max_steps": 300, 
                                  "episodes": 1000},
-                      "hyperparameter": {"lr": 0.007,
-                                         "gamma": 0.99,
-                                         "epsilon": 1.0},
+                      "hyperparameter": {"lr": 0.0003,
+                                         "gamma": 0.99},
                       "hidden_layers": [64, 64]},
             dimensions: int = 3) -> None:
 
@@ -67,10 +66,9 @@ class Worker():
         self.episodes_number = params["number"]['episodes']
         self.lr = params["hyperparameter"]['lr']
         self.gamma = params["hyperparameter"]['gamma']
-        self.epsilon = params["hyperparameter"]['epsilon']
         self.hidden_layers = params['hidden_layers']
 
-        print("Params: %s" % [self.episode_max_steps, self.episodes_number, self.lr, self.gamma, self.epsilon, self.hidden_layers])
+        print("Params: %s" % [self.episode_max_steps, self.episodes_number, self.lr, self.gamma, self.hidden_layers])
 
         # Environment
         if dimensions == 1:
@@ -96,6 +94,7 @@ class Worker():
                              learning_rate = self.lr, 
                              n_steps = self.episode_max_steps,
                              batch_size = 100,
+                             gamma = self.gamma,
                              verbose = 1,
                              tensorboard_log = "./tensorboard-test/",
                              #seed = 12345,
@@ -107,7 +106,7 @@ class Worker():
 
             self.model = DQN("MlpPolicy", 
                              env = self.env,
-                             learning_rate = self.lr, 
+                             #learning_rate = self.lr, 
                              train_freq = self.episode_max_steps,
                              batch_size = 100,
                              verbose = 1,
