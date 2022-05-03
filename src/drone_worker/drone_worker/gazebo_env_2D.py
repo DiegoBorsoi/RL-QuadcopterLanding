@@ -34,10 +34,10 @@ class DroneEnv2D(gym.Env):
         # Define action and observation space
         # They must be gym.spaces objects
 
-        self.n_actions = 4
+        self.n_actions = 5
         self.n_states = 7
 
-        # actions: Left, Right, Down, Up
+        # actions: Left, Right, Down, Up, Wait
         self.action_space = spaces.Discrete(self.n_actions)
 
         # bound parameters
