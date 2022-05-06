@@ -282,34 +282,45 @@ class DroneEnv(gym.Env):
         laser_angle = math.pi / 12
 
         delta_roll = 0
-        if self.last_odom_rot[0] > 0: # inclined in the leftward direction
+        if self.last_odom_rot[0] < 0: # inclined in the leftward direction
             if out_left + (self.last_laserscan_rays[4] == math.inf) + out_right > 1:
-                delta_roll = self.max_delta_roll_pitch
+                delta_roll = -self.max_delta_roll_pitch
             elif out_left:
                 right_laser = self.last_laserscan_rays[4] / math.cos(laser_angle)
                 remaining_right_laser = self.last_laserscan_rays[3] - right_laser
                 laser_paral_dist = right_laser * math.sin(laser_angle)
-                scalene_triang_known_angle = math.pi - laser_angle
+                scalene_triang_known_angle = math.pi / 2 + laser_angle
                 platform_side = math.sqrt(laser_paral_dist ** 2 + remaining_right_laser ** 2 - 2 * laser_paral_dist * remaining_right_laser * math.cos(scalene_triang_known_angle))
-                delta_roll = math.asin(math.sin(scalene_triang_known_angle) * remaining_right_laser / platform_side)
+                delta_roll = -math.asin(math.sin(scalene_triang_known_angle) * remaining_right_laser / platform_side)
             else:
                 central_laser = self.last_laserscan_rays[5] * math.cos(laser_angle)
                 laser_paral_dist = self.last_laserscan_rays[5] * math.sin(laser_angle)
-                delta_roll = math.atan((self.last_laserscan_rays[4] - central_laser) / laser_paral_dist) 
-        elif self.last_odom_rot[0] < 0: # inclined in the rightward direction
+                delta_roll = -math.atan((self.last_laserscan_rays[4] - central_laser) / laser_paral_dist) 
+        elif self.last_odom_rot[0] > 0: # inclined in the rightward direction
             if out_left + (self.last_laserscan_rays[4] == math.inf) + out_right > 1:
-                delta_roll = -self.max_delta_roll_pitch
+                delta_roll = self.max_delta_roll_pitch
             elif out_right:
                 left_laser = self.last_laserscan_rays[4] / math.cos(laser_angle)
                 remaining_left_laser = self.last_laserscan_rays[5] - left_laser
                 laser_paral_dist = left_laser * math.sin(laser_angle)
-                scalene_triang_known_angle = math.pi - laser_angle
+                scalene_triang_known_angle = math.pi / 2 + laser_angle
                 platform_side = math.sqrt(laser_paral_dist ** 2 + remaining_left_laser ** 2 - 2 * laser_paral_dist * remaining_left_laser * math.cos(scalene_triang_known_angle))
-                delta_roll = -math.asin(math.sin(scalene_triang_known_angle) * remaining_left_laser / platform_side)
+                delta_roll = math.asin(math.sin(scalene_triang_known_angle) * remaining_left_laser / platform_side)
             else:
                 central_laser = self.last_laserscan_rays[3] * math.cos(laser_angle)
                 laser_paral_dist = self.last_laserscan_rays[3] * math.sin(laser_angle)
-                delta_roll = -math.atan((self.last_laserscan_rays[4] - central_laser) / laser_paral_dist) 
+                delta_roll = math.atan((self.last_laserscan_rays[4] - central_laser) / laser_paral_dist)
+        else:
+            if out_left + (self.last_laserscan_rays[4] == math.inf) + out_right > 1:
+                delta_roll = 0
+            elif out_left:
+                central_laser = self.last_laserscan_rays[3] * math.cos(laser_angle)
+                laser_paral_dist = self.last_laserscan_rays[3] * math.sin(laser_angle)
+                delta_roll = math.atan((self.last_laserscan_rays[4] - central_laser) / laser_paral_dist)
+            else:
+                central_laser = self.last_laserscan_rays[5] * math.cos(laser_angle)
+                laser_paral_dist = self.last_laserscan_rays[5] * math.sin(laser_angle)
+                delta_roll = -math.atan((self.last_laserscan_rays[4] - central_laser) / laser_paral_dist)
 
         delta_pitch = 0
         if self.last_odom_rot[1] > 0: # inclined in the forward direction
@@ -319,7 +330,7 @@ class DroneEnv(gym.Env):
                 back_laser = self.last_laserscan_rays[4] / math.cos(laser_angle)
                 remaining_back_laser = self.last_laserscan_rays[1] - back_laser
                 laser_paral_dist = back_laser * math.sin(laser_angle)
-                scalene_triang_known_angle = math.pi - laser_angle
+                scalene_triang_known_angle = math.pi / 2 + laser_angle
                 platform_side = math.sqrt(laser_paral_dist ** 2 + remaining_back_laser ** 2 - 2 * laser_paral_dist * remaining_back_laser * math.cos(scalene_triang_known_angle))
                 delta_pitch = math.asin(math.sin(scalene_triang_known_angle) * remaining_back_laser / platform_side)
             else:
@@ -333,14 +344,25 @@ class DroneEnv(gym.Env):
                 front_laser = self.last_laserscan_rays[4] / math.cos(laser_angle)
                 remaining_front_laser = self.last_laserscan_rays[7] - front_laser
                 laser_paral_dist = front_laser * math.sin(laser_angle)
-                scalene_triang_known_angle = math.pi - laser_angle
+                scalene_triang_known_angle = math.pi / 2 + laser_angle
                 platform_side = math.sqrt(laser_paral_dist ** 2 + remaining_front_laser ** 2 - 2 * laser_paral_dist * remaining_front_laser * math.cos(scalene_triang_known_angle))
                 delta_pitch = -math.asin(math.sin(scalene_triang_known_angle) * remaining_front_laser / platform_side)
             else:
                 central_laser = self.last_laserscan_rays[1] * math.cos(laser_angle)
                 laser_paral_dist = self.last_laserscan_rays[1] * math.sin(laser_angle)
                 delta_pitch = -math.atan((self.last_laserscan_rays[4] - central_laser) / laser_paral_dist) 
-
+        else:
+            if out_front + (self.last_laserscan_rays[4] == math.inf) + out_back > 1:
+                delta_pitch = 0
+            elif out_front:
+                central_laser = self.last_laserscan_rays[1] * math.cos(laser_angle)
+                laser_paral_dist = self.last_laserscan_rays[1] * math.sin(laser_angle)
+                delta_pitch = -math.atan((self.last_laserscan_rays[4] - central_laser) / laser_paral_dist) 
+            else:
+                central_laser = self.last_laserscan_rays[7] * math.cos(laser_angle)
+                laser_paral_dist = self.last_laserscan_rays[7] * math.sin(laser_angle)
+                delta_pitch = math.atan((self.last_laserscan_rays[4] - central_laser) / laser_paral_dist) 
+        
         s += [delta_roll / self.max_delta_roll_pitch, 
               delta_pitch / self.max_delta_roll_pitch]
 
@@ -445,10 +467,10 @@ class DroneEnv(gym.Env):
             msg.pose.pose.orientation.w)
         
         obs_state_vector_x_y_z = [msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z]
-        obs_state_vector_p_r_y = [roll, pitch, yaw]
+        obs_state_vector_r_p_y = [roll, pitch, yaw]
         
         self.last_odom_pos = obs_state_vector_x_y_z
-        self.last_odom_rot = obs_state_vector_p_r_y
+        self.last_odom_rot = obs_state_vector_r_p_y
         self.last_odom_vel_linear = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z]
 
         self.odom_updated = True
