@@ -90,7 +90,7 @@ class DroneEnv1D(gym.Env):
         self.quadcopter_namespace = "demo"
         self.quadcopter_name = "Quadcopter"
 
-        self.skip_msg = 50
+        self.skip_msg = 20
         self.skip_count_odom = 0
         self.skip_count_laser = 0
 
