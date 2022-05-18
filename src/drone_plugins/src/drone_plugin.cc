@@ -259,7 +259,7 @@ namespace gazebo_plugins
     */
 
     // Set the hover vertical velocity
-    impl_->hover_z_vel_ = 0.294f;
+    impl_->hover_z_vel_ = 0.2939999997615814f;
 
     impl_->max_rot_ = (M_PI / 6);
     impl_->rot_step_ = impl_->max_rot_ / 50;

@@ -96,6 +96,7 @@ class DroneEnv1D(gym.Env):
 
         self.last_odom_pos = [0] * 3
         self.last_odom_rot = [0] * 3
+        self.last_odom_vel_linear = [0] * 3
         self.last_laserscan_rays = [0] * 9
 
         self.odom_updated = False
