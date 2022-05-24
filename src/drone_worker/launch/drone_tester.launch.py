@@ -78,6 +78,11 @@ def generate_launch_description():
             default_value=['10'],
             description='Number of test to execute.'
         ),
+        DeclareLaunchArgument(
+            'output_folder',
+            default_value=['saves/'],
+            description='Name of output folder for position data to be saved'
+        ),
         Node(
             package='drone_worker',
             executable='net_tester',
@@ -90,6 +95,16 @@ def generate_launch_description():
                 LaunchConfiguration('param_file'),
                 LaunchConfiguration('dimensions'),
                 LaunchConfiguration('n_test'),
+            ]
+        ),
+        Node(
+            package='drone_worker',
+            executable='pos_saver',
+            name='pos_saver',
+            namespace=LaunchConfiguration('worker_ns'),
+            output='screen',
+            arguments=[
+                LaunchConfiguration('output_folder')
             ]
         ),
         ExecuteProcess(
