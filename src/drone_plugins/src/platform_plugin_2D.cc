@@ -237,7 +237,7 @@ namespace gazebo_plugins
     impl_->target_pitch = 0;
 
     impl_->max_rot = (M_PI / 12);
-    impl_->rot_steps = 50.0f;
+    impl_->rot_steps = 20.0f;
 
     impl_->rot_zero_margin = impl_->max_rot / (impl_->rot_steps / 2);
 
