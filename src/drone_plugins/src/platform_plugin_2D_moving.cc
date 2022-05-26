@@ -105,8 +105,9 @@ namespace gazebo_plugins
     /// True to publish odom-to-world transforms.
     //bool publish_odom_tf_;
 
-    // target roll
+    // target roll and pitch
     float target_roll;
+    float target_pitch;
 
     // rotation limit and increase/decrease step
     float max_rot;
@@ -114,6 +115,7 @@ namespace gazebo_plugins
 
     // ccondition if we reached the target rotation
     bool reached_target_roll;
+    bool reached_target_pitch;
 
     // margin to keep the rotation stable on target
     float rot_zero_margin;
@@ -126,6 +128,8 @@ namespace gazebo_plugins
 
     float ang_vel;
     float lin_vel;
+
+    float rot_speed;
   };
 
   class PlatformPlugin : public gazebo::ModelPlugin
@@ -232,13 +236,17 @@ namespace gazebo_plugins
     //impl_->odom_.child_frame_id = impl_->robot_base_frame_;
 
     impl_->target_roll = 0;
+    impl_->target_pitch = 0;
 
     impl_->max_rot = (M_PI / 12);
     impl_->rot_steps = 20.0f;
 
-    impl_->rot_zero_margin = impl_->max_rot / (impl_->rot_steps / 2);
+    impl_->rot_speed = 0.01f;
+
+    impl_->rot_zero_margin = impl_->max_rot / 20;
 
     impl_->reached_target_roll = true;
+    impl_->reached_target_pitch = true;
 
     ignition::math::Pose3d pose = impl_->model_->WorldPose();
     impl_->initial_x = static_cast<float>(pose.Pos().X());
@@ -260,6 +268,7 @@ namespace gazebo_plugins
   {
     impl_->last_update_time_ = impl_->world_->SimTime();
     impl_->reached_target_roll = true;
+    impl_->reached_target_pitch = true;
   }
 
   void PlatformPluginPrivate::OnUpdate(const gazebo::common::UpdateInfo & _info)
@@ -270,43 +279,52 @@ namespace gazebo_plugins
       ignition::math::Pose3d pose = model_->WorldPose();
 
       float current_roll = static_cast<float>(pose.Rot().Roll()); // on increase go down on y+
+      float current_pitch = static_cast<float>(pose.Rot().Pitch());
+      //std::cout << "roll - pitch : " << current_roll << " - " << current_pitch << std::endl;
 
       //std::cout << "roll: " << target_roll << " - " << current_roll << std::endl;
+      //std::cout << "pitch: " << target_pitch << " - " << current_pitch << std::endl;
       if(current_roll < (target_roll + rot_zero_margin) && current_roll > (target_roll - rot_zero_margin)){
         reached_target_roll = true;
       }
+      if(current_pitch < (target_pitch + rot_zero_margin) && current_pitch > (target_pitch - rot_zero_margin)){
+        reached_target_pitch = true;
+      }
       
       float x_ang_vel = 0;
+      float y_ang_vel = 0;
       // calculate new random rotation if we reach the previous one
-      if(reached_target_roll){
+      if(reached_target_roll && reached_target_pitch){
         // generate new target rotations
         std::random_device rd; // obtain a random number from hardware
         std::mt19937 gen(rd()); // seed the generator
         std::uniform_real_distribution<float> fdistr(- max_rot, max_rot);
 
         target_roll = fdistr(gen);
-        //std::cout << target_roll << std::endl;
+        target_pitch = fdistr(gen);
+        //std::cout << target_roll << " - " << target_pitch << std::endl;
 
         reached_target_roll = false;
+        reached_target_pitch = false;
       }else{
         // take a step to reach the target rotation
         if(! reached_target_roll){
           if(current_roll > target_roll){
-            x_ang_vel = - (abs(target_roll - current_roll) / rot_steps);
+            x_ang_vel = - rot_speed;
           }else if(current_roll < target_roll){
-            x_ang_vel = (abs(target_roll - current_roll) / rot_steps);
+            x_ang_vel = rot_speed;
+          }
+        }
+
+        if(! reached_target_pitch){
+          if(current_pitch > target_pitch){
+            y_ang_vel = - rot_speed;
+          }else if(current_pitch < target_pitch){
+            y_ang_vel = rot_speed;
           }
         }
       }
 
-      float y_ang_vel = 0;
-      float current_pitch = static_cast<float>(pose.Rot().Pitch());
-      if (current_pitch > rot_zero_margin){
-        y_ang_vel = - ang_vel;
-      }
-      else if (current_pitch < - rot_zero_margin){
-        y_ang_vel = ang_vel;
-      }
       
       float z_ang_vel = 0;
       float current_yaw = static_cast<float>(pose.Rot().Yaw());
@@ -358,6 +376,16 @@ namespace gazebo_plugins
           y_lin_vel, 
           z_lin_vel));
       
+      /*
+      pose.Set(
+          0,//pose.Pos().X(), 
+          0,//pose.Pos().Y(), 
+          0,//pose.Pos().Z(),
+          current_roll + x_ang_vel,
+          current_pitch + y_ang_vel,
+          0);
+      model_->SetRelativePose(pose);
+      */
       last_update_time_ = _info.simTime;
     }
 

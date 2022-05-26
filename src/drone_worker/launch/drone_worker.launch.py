@@ -30,11 +30,17 @@ def generate_launch_description():
     world_file_name_stat = 'quadcopter_platf-stat.world'
     world_stat = os.path.join(pkg_dir, 'worlds', world_file_name_stat)
 
-    world_file_name_mov2D = 'quadcopter_platf-moving_2D.world'
-    world_mov2D = os.path.join(pkg_dir, 'worlds', world_file_name_mov2D)
+    world_file_name_2D_stat = 'quadcopter_platf-2D_stat.world'
+    world_2D_stat = os.path.join(pkg_dir, 'worlds', world_file_name_2D_stat)
 
-    world_file_name_mov3D = 'quadcopter_platf-moving_3D.world'
-    world_mov3D = os.path.join(pkg_dir, 'worlds', world_file_name_mov3D)
+    world_file_name_2D_moving = 'quadcopter_platf-2D_moving.world'
+    world_2D_moving = os.path.join(pkg_dir, 'worlds', world_file_name_2D_moving)
+
+    world_file_name_3D_stat = 'quadcopter_platf-3D_stat.world'
+    world_3D_stat = os.path.join(pkg_dir, 'worlds', world_file_name_3D_stat)
+
+    world_file_name_3D_moving = 'quadcopter_platf-3D_moving.world'
+    world_3D_moving = os.path.join(pkg_dir, 'worlds', world_file_name_3D_moving)
 
     """Launch file for training."""
     return LaunchDescription([
@@ -64,9 +70,9 @@ def generate_launch_description():
             description='Condition to check for having the gui.'
         ),
         DeclareLaunchArgument(
-            'moving_platform',
-            default_value=['False'],
-            description='Condition to check for having the moving platform (default stationary).'
+            'platform_type',
+            default_value=['0'],
+            description='Type of platform: 0 -> stationary (default), 1 -> moves to a rot and stay until reset, 2 -> moves continuosly.'
         ),
         DeclareLaunchArgument(
             'dimensions',
@@ -104,7 +110,7 @@ def generate_launch_description():
             output='screen',
             condition=IfCondition(PythonExpression([LaunchConfiguration('dimensions'), ' == 2'
                                                     ' and ',
-                                                    LaunchConfiguration('moving_platform'), ' == False']))
+                                                    LaunchConfiguration('platform_type'), ' == 0']))
         ),
         ExecuteProcess(
             cmd=['gzserver', '--verbose', world_stat,
@@ -115,10 +121,10 @@ def generate_launch_description():
             output='screen',
             condition=IfCondition(PythonExpression([LaunchConfiguration('dimensions'), ' == 3'
                                                     ' and ',
-                                                    LaunchConfiguration('moving_platform'), ' == False']))
+                                                    LaunchConfiguration('platform_type'), ' == 0']))
         ),
         ExecuteProcess(
-            cmd=['gzserver', '--verbose', world_mov2D,
+            cmd=['gzserver', '--verbose', world_2D_stat,
                              '-s', 'libgazebo_ros_init.so',
                              '-s', 'libgazebo_ros_factory.so',
                              #'-s', 'libgazebo_ros_force_system.so',
@@ -126,10 +132,21 @@ def generate_launch_description():
             output='screen',
             condition=IfCondition(PythonExpression([LaunchConfiguration('dimensions'), ' == 2'
                                                     ' and ',
-                                                    LaunchConfiguration('moving_platform')]))
+                                                    LaunchConfiguration('platform_type'), ' == 1']))
         ),
         ExecuteProcess(
-            cmd=['gzserver', '--verbose', world_mov3D,
+            cmd=['gzserver', '--verbose', world_2D_moving,
+                             '-s', 'libgazebo_ros_init.so',
+                             '-s', 'libgazebo_ros_factory.so',
+                             #'-s', 'libgazebo_ros_force_system.so',
+                             '--pause'],
+            output='screen',
+            condition=IfCondition(PythonExpression([LaunchConfiguration('dimensions'), ' == 2'
+                                                    ' and ',
+                                                    LaunchConfiguration('platform_type'), ' == 2']))
+        ),
+        ExecuteProcess(
+            cmd=['gzserver', '--verbose', world_3D_stat,
                              '-s', 'libgazebo_ros_init.so',
                              '-s', 'libgazebo_ros_factory.so',
                              #'-s', 'libgazebo_ros_force_system.so',
@@ -137,7 +154,18 @@ def generate_launch_description():
             output='screen',
             condition=IfCondition(PythonExpression([LaunchConfiguration('dimensions'), ' == 3'
                                                     ' and ',
-                                                    LaunchConfiguration('moving_platform')]))
+                                                    LaunchConfiguration('platform_type'), ' == 1']))
+        ),
+        ExecuteProcess(
+            cmd=['gzserver', '--verbose', world_3D_moving,
+                             '-s', 'libgazebo_ros_init.so',
+                             '-s', 'libgazebo_ros_factory.so',
+                             #'-s', 'libgazebo_ros_force_system.so',
+                             '--pause'],
+            output='screen',
+            condition=IfCondition(PythonExpression([LaunchConfiguration('dimensions'), ' == 3'
+                                                    ' and ',
+                                                    LaunchConfiguration('platform_type'), ' == 2']))
         ),
         ExecuteProcess(
             cmd=['gzclient', '--verbose'],

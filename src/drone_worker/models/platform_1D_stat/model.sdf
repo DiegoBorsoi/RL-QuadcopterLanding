@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.7'>
-  <model name='platform_mov1'>
+  <model name='platform_1D_stat'>
     <link name='link_0'>
       <inertial>
         <mass>1000</mass>
@@ -102,7 +102,7 @@
     <static>0</static>
     <allow_auto_disable>1</allow_auto_disable>
 
-    <plugin name="platform_plugin_1D" filename="libplatform_plugin_1D.so">
+    <plugin name="platform_plugin_1D_stat" filename="libplatform_plugin_1D_stat.so">
     </plugin>
   </model>
 </sdf>

@@ -64,27 +64,7 @@ ament_target_dependencies(contact_plugin
 ament_export_libraries(contact_plugin)
 
 
-add_library(platform_plugin_2D SHARED
-  src/platform_plugin_2D.cc
-)
-ament_target_dependencies(platform_plugin_2D
-  "gazebo_dev"
-  "gazebo_ros"
-  "nav_msgs"
-  "rclcpp"
-)
-ament_export_libraries(platform_plugin_2D)
 
-add_library(platform_plugin_1D SHARED
-  src/platform_plugin_1D.cc
-)
-ament_target_dependencies(platform_plugin_1D
-  "gazebo_dev"
-  "gazebo_ros"
-  "nav_msgs"
-  "rclcpp"
-)
-ament_export_libraries(platform_plugin_1D)
 
 add_library(platform_plugin_stat SHARED
   src/platform_plugin_stat.cc
@@ -95,6 +75,49 @@ ament_target_dependencies(platform_plugin_stat
 )
 ament_export_libraries(platform_plugin_stat)
 
+add_library(platform_plugin_1D_stat SHARED
+  src/platform_plugin_1D_stat.cc
+)
+ament_target_dependencies(platform_plugin_1D_stat
+  "gazebo_dev"
+  "gazebo_ros"
+  "nav_msgs"
+  "rclcpp"
+)
+ament_export_libraries(platform_plugin_1D_stat)
+
+add_library(platform_plugin_1D_moving SHARED
+  src/platform_plugin_1D_moving.cc
+)
+ament_target_dependencies(platform_plugin_1D_moving
+  "gazebo_dev"
+  "gazebo_ros"
+  "nav_msgs"
+  "rclcpp"
+)
+ament_export_libraries(platform_plugin_1D_moving)
+
+add_library(platform_plugin_2D_stat SHARED
+  src/platform_plugin_2D_stat.cc
+)
+ament_target_dependencies(platform_plugin_2D_stat
+  "gazebo_dev"
+  "gazebo_ros"
+  "nav_msgs"
+  "rclcpp"
+)
+ament_export_libraries(platform_plugin_2D_stat)
+
+add_library(platform_plugin_2D_moving SHARED
+  src/platform_plugin_2D_moving.cc
+)
+ament_target_dependencies(platform_plugin_2D_moving
+  "gazebo_dev"
+  "gazebo_ros"
+  "nav_msgs"
+  "rclcpp"
+)
+ament_export_libraries(platform_plugin_2D_moving)
 
 
 ament_export_dependencies(rclcpp)
