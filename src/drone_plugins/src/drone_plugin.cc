@@ -61,15 +61,18 @@ namespace gazebo_plugins
 
     float max_rot_;
 
-    float rot_step_;
+    float rot_vel;
 
     float rot_zero_margin_;
 
-    float horizontal_vel_;
+    float horizontal_vel_max;
 
-    float current_vertical_vel_;
-    float vertical_vel_max_;
-    float vertical_step_;
+    float current_vertical_vel;
+    float vertical_vel_max;
+    float vertical_step;
+
+    std::queue<float> last_x_vels;
+    std::queue<float> last_y_vels;
 
     /// Keep latest odometry message
     nav_msgs::msg::Odometry odom_;
@@ -262,15 +265,20 @@ namespace gazebo_plugins
     impl_->hover_z_vel_ = 0.2939999997615814f;
 
     impl_->max_rot_ = (M_PI / 6);
-    impl_->rot_step_ = impl_->max_rot_ / 50;
+    impl_->rot_vel = 1.0f;
 
     impl_->rot_zero_margin_ = 0.005f;
 
-    impl_->horizontal_vel_ = impl_->hover_z_vel_ * 2;
+    impl_->horizontal_vel_max = 1.0f / sinf(impl_->max_rot_);
 
-    impl_->current_vertical_vel_ = impl_->hover_z_vel_;
-    impl_->vertical_vel_max_ = 0.05f;
-    impl_->vertical_step_ = impl_->vertical_vel_max_ / 10;
+    impl_->current_vertical_vel = impl_->hover_z_vel_;
+    impl_->vertical_vel_max = 0.5f;
+    impl_->vertical_step = impl_->vertical_vel_max / 10;
+
+    for(unsigned i=0; i<7; i++){
+      impl_->last_x_vels.push(0);
+      impl_->last_y_vels.push(0);
+    }
 
 
     // Listen to the update event (broadcast every simulation iteration)
@@ -288,7 +296,7 @@ namespace gazebo_plugins
     impl_->target_cmd_vel_.angular.y = 0;
     impl_->target_cmd_vel_.angular.z = 0;
 
-    impl_->current_vertical_vel_ = impl_->hover_z_vel_;
+    impl_->current_vertical_vel = impl_->hover_z_vel_;
 
     //impl_->controllers_.clear();
   }
@@ -315,18 +323,18 @@ namespace gazebo_plugins
 
       if (target_cmd_vel_.linear.x == 1.0f){
         if (current_pitch < max_rot_){
-          y_ang_vel_ = rot_step_;
+          y_ang_vel_ = rot_vel;
         }
       }else if (target_cmd_vel_.linear.x == -1.0f) {
         if (current_pitch > - max_rot_){
-          y_ang_vel_ = - rot_step_;
+          y_ang_vel_ = - rot_vel;
         }
       }else { // (target_cmd_vel_.linear.x == 0)
         if (current_pitch > 0){
-          y_ang_vel_ = - rot_step_;
+          y_ang_vel_ = - rot_vel;
         }
         else if (current_pitch < 0){
-          y_ang_vel_ = rot_step_;
+          y_ang_vel_ = rot_vel;
         }
       }
 
@@ -336,58 +344,66 @@ namespace gazebo_plugins
 
       if (target_cmd_vel_.linear.y == 1.0f){
         if (current_roll < max_rot_){
-          x_ang_vel_ = - rot_step_;
+          x_ang_vel_ = - rot_vel;
         }
       }else if (target_cmd_vel_.linear.y == -1.0f) {
         if (current_roll > - max_rot_){
-          x_ang_vel_ = rot_step_;
+          x_ang_vel_ = rot_vel;
         }
       }else { // (target_cmd_vel_.linear.y == 0)
         if (current_roll > 0){
-          x_ang_vel_ = rot_step_;
+          x_ang_vel_ = rot_vel;
         }
         else if (current_roll < 0){
-          x_ang_vel_ = - rot_step_;
+          x_ang_vel_ = - rot_vel;
         }
       }
 
       float z_ang_vel_ = 0;
       float current_yaw = static_cast<float>(pose.Rot().Yaw());
       if (current_yaw > rot_zero_margin_){
-        z_ang_vel_ = - rot_step_;
+        z_ang_vel_ = - rot_vel;
       }
       else if (current_yaw < - rot_zero_margin_){
-        z_ang_vel_ = rot_step_;
+        z_ang_vel_ = rot_vel;
       }
 
-      float x_lin_vel_ = sinf(current_pitch) * horizontal_vel_;
-      float y_lin_vel_ = sinf(current_roll) * horizontal_vel_;
+      float x_lin_vel = last_x_vels.front();
+      last_x_vels.pop();
+      last_x_vels.push(sinf(current_pitch) * horizontal_vel_max);
+
+      float y_lin_vel = last_y_vels.front();
+      last_y_vels.pop();
+      last_y_vels.push(sinf(current_roll) * horizontal_vel_max);
 
       if (target_cmd_vel_.linear.z == 1.0f){
-        if (current_vertical_vel_ < hover_z_vel_ + vertical_vel_max_){
-          current_vertical_vel_ += vertical_step_;
+        if (current_vertical_vel < hover_z_vel_ + vertical_vel_max){
+          current_vertical_vel += vertical_step;
         }
       }else if (target_cmd_vel_.linear.z == -1.0f){
-        if (current_vertical_vel_ > hover_z_vel_ - vertical_vel_max_){
-          current_vertical_vel_ -= vertical_step_;
+        if (current_vertical_vel > hover_z_vel_ - vertical_vel_max){
+          current_vertical_vel -= vertical_step;
         }
       }else if (target_cmd_vel_.linear.z == 0){
-        if (current_vertical_vel_ < hover_z_vel_){
-          current_vertical_vel_ += vertical_step_;
-        }else if (current_vertical_vel_ > hover_z_vel_){
-          current_vertical_vel_ -= vertical_step_;
+        if (current_vertical_vel < hover_z_vel_){
+          current_vertical_vel += vertical_step;
+        }else if (current_vertical_vel > hover_z_vel_){
+          current_vertical_vel -= vertical_step;
         }
       }
 
       if (static_cast<float>(pose.Pos().Z()) < 0.1f){
-        current_vertical_vel_ = 0;
+        current_vertical_vel = 0;
       }
+
+
+
       
       model_->SetLinearVel(
         ignition::math::Vector3d(
-          x_lin_vel_,
-          y_lin_vel_,
-          current_vertical_vel_));
+          x_lin_vel,
+          y_lin_vel,
+          current_vertical_vel));
 
       model_->SetAngularVel(
         ignition::math::Vector3d(
