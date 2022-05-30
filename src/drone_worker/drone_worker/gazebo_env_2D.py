@@ -220,7 +220,7 @@ class DroneEnv2D(gym.Env):
         self.pause_physics()
         self.delete_entity()
         time.sleep(0.2)
-        #self.reset_world()
+        self.reset_world()
         #self.reset_sim()
 
         # spawn model in the new position and unpause physics
