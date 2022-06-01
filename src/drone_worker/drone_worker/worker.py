@@ -57,6 +57,8 @@ class Worker():
                       "hidden_layers": [64, 64]},
             dimensions: int = 3) -> None:
 
+        self.policy_type = policy_type
+
         # Set the output file for final model.
         self.output_folder = output_folder
         
@@ -84,7 +86,7 @@ class Worker():
 
         self.save_callback = SaveModelCallback(save_skip=10 * self.episode_max_steps, log_dir=self.output_folder)
         # Model
-        if policy_type == 'PPO':
+        if self.policy_type == 'PPO':
             # arguments passed to the network
             policy_kwargs = dict(activation_fn=th.nn.Tanh,
                                  net_arch=[dict(pi=self.hidden_layers, vf=self.hidden_layers)])
@@ -99,7 +101,7 @@ class Worker():
                              tensorboard_log = "./tensorboard-test/",
                              #seed = 12345,
                              policy_kwargs = policy_kwargs) # TODO: aggiungere parametri
-        elif policy_type == 'DQN':
+        elif self.policy_type == 'DQN':
             # arguments passed to the network
             policy_kwargs = dict(activation_fn=th.nn.ReLU,      # default used by stable-baselines3
                                  net_arch=self.hidden_layers)
@@ -114,12 +116,25 @@ class Worker():
                              #seed = 12345,
                              policy_kwargs = policy_kwargs) # TODO: aggiungere parametri
         else:
-            print("ERROR: Invalid policy: %s" % policy_type)
+            print("ERROR: Invalid policy: %s" % self.policy_type)
 
     def learn(self):
         # Learn for the given number of episodes
         self.model.learn(total_timesteps=self.episodes_number * self.episode_max_steps, 
                          callback=self.save_callback)
+
+    def load(self, load_path: str = 'saves/'):
+
+        load_file = os.path.join(load_path, 'rl_model')
+
+        if self.policy_type == 'PPO':
+            self.model = PPO.load(load_file, 
+                                  env = self.env)
+        elif self.policy_type == 'DQN':
+            self.model = DQN.load(load_file, 
+                                  env = self.env)
+        else:
+            print("ERROR: Invalid policy: %s" % self.policy_type)
 
 
 def main():
@@ -127,6 +142,8 @@ def main():
     policy_type = sys.argv[2]
     params_file = sys.argv[3]
     dimensions = int(sys.argv[4])
+    load_net = sys.argv[5]
+    load_path = sys.argv[6]
 
     try:
         params = {}
@@ -138,6 +155,9 @@ def main():
                 print(exc)
 
         worker = Worker(output_folder, policy_type, params, dimensions)
+
+        if load_net == 'True':
+            worker.load(load_path)
 
         worker.learn()
         print("-----FINITO!!!!!------------------------------")

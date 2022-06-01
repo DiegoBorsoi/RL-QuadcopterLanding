@@ -79,6 +79,16 @@ def generate_launch_description():
             default_value=['3'],
             description='Number of dimensions in which the drone can operate (default 3).'
         ),
+        DeclareLaunchArgument(
+            'load_net',
+            default_value=['False'],
+            description='Condition to check for loading an old network.'
+        ),
+        DeclareLaunchArgument(
+            'load_path',
+            default_value=['saves/'],
+            description='Path of the folder from were we load an old network.'
+        ),
         Node(
             package='drone_worker',
             executable='train_drone',
@@ -90,6 +100,8 @@ def generate_launch_description():
                 LaunchConfiguration('policy_type'),
                 LaunchConfiguration('param_file'),
                 LaunchConfiguration('dimensions'),
+                LaunchConfiguration('load_net'),
+                LaunchConfiguration('load_path'),
             ]
         ),
         ExecuteProcess(
