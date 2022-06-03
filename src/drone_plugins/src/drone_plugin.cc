@@ -275,7 +275,7 @@ namespace gazebo_plugins
     impl_->vertical_vel_max = 0.5f;
     impl_->vertical_step = impl_->vertical_vel_max / 10;
 
-    for(unsigned i=0; i<7; i++){
+    for(unsigned i=0; i<5; i++){
       impl_->last_x_vels.push(0);
       impl_->last_y_vels.push(0);
     }
