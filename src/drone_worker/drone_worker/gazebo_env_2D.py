@@ -363,7 +363,7 @@ class DroneEnv2D(gym.Env):
         dist_eucl_vel = dist_eucl_vel / math.sqrt((self.max_horizontal_vel ** 2) + self.max_vertical_vel ** 2)
 
         dist_eucl_rot = math.sqrt(
-            (self.last_odom_rot[1] - self.platform_rot[1]) ** 2)
+            (self.last_odom_rot[0] - self.platform_rot[0]) ** 2)
         # normalization to (0, 1)
         dist_eucl_rot = dist_eucl_rot / self.max_delta_roll_pitch
 
