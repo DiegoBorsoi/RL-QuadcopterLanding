@@ -112,6 +112,8 @@ class DroneEnv2D(gym.Env):
         self.done_flag = False
         self.reset_flag = False
         self.platform_touch = False
+        self.touch_roll_error = 0
+        self.platform_rot_margin = 0.07
 
         self.reward_multiplier = 10
         self.reward_penalty = 2 * self.run_max_steps
@@ -237,6 +239,7 @@ class DroneEnv2D(gym.Env):
         self.done_flag = False
         self.reset_flag = False
         self.platform_touch = False
+        self.touch_roll_error = 0
 
         return observation
 
@@ -363,7 +366,7 @@ class DroneEnv2D(gym.Env):
         dist_eucl_vel = dist_eucl_vel / math.sqrt((self.max_horizontal_vel ** 2) + self.max_vertical_vel ** 2)
 
         dist_eucl_rot = math.sqrt(
-            (self.last_odom_rot[0] - self.platform_rot[0]) ** 2)
+            (self.touch_roll_error) ** 2)
         # normalization to (0, 1)
         dist_eucl_rot = dist_eucl_rot / self.max_delta_roll_pitch
 
@@ -373,8 +376,8 @@ class DroneEnv2D(gym.Env):
         if self.reset_flag:
             reward += -self.reward_penalty
 
-        # if we are touching the platform, add a reward penalty if we are not on the same plane(roll pitch)
-        if self.platform_touch and (math.fabs(self.last_odom_rot[0] - self.platform_rot[0]) > 0.1 or math.fabs(self.last_odom_rot[1] - self.platform_rot[1]) > 0.1):
+        # if we are touching the platform, add a reward penalty if we are not on the same plane (check roll)
+        if self.platform_touch and math.fabs(self.touch_roll_error) > self.platform_rot_margin:
             reward += -self.reward_penalty_touch
 
         # multiply for a given value, needed only for more "easy to read" values
@@ -438,7 +441,9 @@ class DroneEnv2D(gym.Env):
         '''
 
     def contact_callback(self, msg):
-        self.platform_touch |= len(list(msg.states)) > 0
+        if not self.platform_touch and len(list(msg.states)) > 0:
+            self.platform_touch = True
+            self.touch_roll_error = self.last_odom_rot[0] - self.platform_rot[0]
 
     def platform_callback(self, msg):
         """
