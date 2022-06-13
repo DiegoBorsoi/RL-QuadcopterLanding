@@ -18,12 +18,7 @@ class Tester():
             self,
             input_folder: str = 'saves-default/',
             policy_type: str = 'PPO',
-            params = {"number": {"episode_max_steps": 300, 
-                                 "episodes": 1000},
-                      "hyperparameter": {"lr": 0.007,
-                                         "gamma": 0.99,
-                                         "epsilon": 1.0},
-                      "hidden_layers": [64, 64]},
+            params = {"number": {"episode_max_steps": 300}},
             dimensions: int = 3) -> None:
 
         # Set the output file for final model.
@@ -32,13 +27,6 @@ class Tester():
         # Parameters passed using yaml config file
         # TODO: controllare/aggiungere parametri
         self.episode_max_steps = params["number"]["episode_max_steps"]
-        self.episodes_number = params["number"]["episodes"]
-        self.lr = params["hyperparameter"]["lr"]
-        self.gamma = params["hyperparameter"]["gamma"]
-        self.epsilon = params["hyperparameter"]["epsilon"]
-        self.hidden_layers = params["hidden_layers"]
-
-        print("Params: %s" % [self.episode_max_steps, self.episodes_number, self.lr, self.gamma, self.epsilon, self.hidden_layers])
 
         # Environment
         if dimensions == 1:
