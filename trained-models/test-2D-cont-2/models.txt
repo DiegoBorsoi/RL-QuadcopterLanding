@@ -1,0 +1,6 @@
+2D - type:=1 -- PPO_6 (cont 2, lr 1e-4)
+2D - type:=1 -- PPO_5 (cont 2)
+2D - type:=1 -- PPO_4 (cont 2)
+2D - type:=1 -- PPO_3 (cont 2)
+2D - type:=0 -- PPO_2 funzia
+2D - type:=0 -- PPO_1
