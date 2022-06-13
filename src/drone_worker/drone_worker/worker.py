@@ -128,8 +128,10 @@ class Worker():
         load_file = os.path.join(load_path, 'rl_model')
 
         if self.policy_type == 'PPO':
+            custom_objects = { 'learning_rate': self.lr }
             self.model = PPO.load(load_file, 
-                                  env = self.env)
+                                  env = self.env,
+                                  custom_objects = custom_objects)
         elif self.policy_type == 'DQN':
             self.model = DQN.load(load_file, 
                                   env = self.env)
