@@ -1,0 +1,4 @@
+[128, 64]
+2D - type:=1 -- PPO_3 (cont 2, lr 1e-4)
+2D - type:=0 -- PPO_2 (cont 1, lr 1e-4)
+2D - type:=0 -- PPO_1
