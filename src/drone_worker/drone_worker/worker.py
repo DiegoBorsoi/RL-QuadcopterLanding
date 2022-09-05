@@ -3,6 +3,7 @@ import sys
 import yaml
 
 import torch as th
+import numpy as np
 
 from drone_worker.gazebo_env_1D import DroneEnv1D
 from drone_worker.gazebo_env_2D import DroneEnv2D
@@ -11,22 +12,28 @@ from drone_worker.gazebo_env import DroneEnv
 from stable_baselines3 import PPO
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import BaseCallback
+from stable_baselines3.common.utils import safe_mean
 
 
 class SaveModelCallback(BaseCallback):
     """
     Callback for saving a model every ``save_skip`` episodes.
 
-    :param save_skip: (int) number of timesteps (episodes) to skip before saving the model.
+    :param save_skip: (int) number of timesteps to skip before saving the model.
     :param log_dir: (str) Path to the folder where the model will be saved.
       It must contains the file created by the ``Monitor`` wrapper.
     :param verbose: (int)
     """
-    def __init__(self, save_skip: int, log_dir: str, verbose=1):
+    def __init__(self, save_rollout_skip: int, rollout_length: int, log_dir: str, verbose=1):
         super(SaveModelCallback, self).__init__(verbose)
-        self.save_skip = save_skip
+        self.rollout_length = rollout_length
+        self.save_steps_skip = save_rollout_skip * rollout_length
         self.log_dir = log_dir
         self.save_path = os.path.join(log_dir, 'rl_model')
+
+        self.best_mean_rew = -np.inf
+        self.best_txt_file = os.path.join(log_dir, 'best_model_ep.txt')
+        self.best_save_path = os.path.join(log_dir, 'rl_model-best')
 
     def _init_callback(self) -> None:
         # Create folder if needed
@@ -35,9 +42,21 @@ class SaveModelCallback(BaseCallback):
 
     def _on_rollout_end(self) -> None:
 
-        if self.num_timesteps % self.save_skip == 0:
+        # save model every self.save_skip rollouts
+        if self.num_timesteps % self.save_steps_skip == 0:
             print(f"Saving new model to {self.save_path}.zip")
             self.model.save(self.save_path)
+
+        # save best model
+        rollout_mean_rew = safe_mean([ep_info["r"] for ep_info in self.locals["self"].ep_info_buffer])
+        if rollout_mean_rew > self.best_mean_rew:
+            # update mean reward and write it on a txt file
+            self.best_mean_rew = rollout_mean_rew
+            with open(self.best_txt_file, 'w') as f:
+                f.write("ep: " + str(self.num_timesteps // self.rollout_length) + '\n')
+                f.write("mean_rew: " + str(self.best_mean_rew) + '\n')
+            # save the model
+            self.model.save(self.best_save_path)
 
     def _on_step(self) -> bool:
         return True
@@ -84,7 +103,7 @@ class Worker():
         #print("Action space: %s" % self.env.action_space)
         #print("Action sample: %s" % self.env.action_space.sample())
 
-        self.save_callback = SaveModelCallback(save_skip=10 * self.episode_max_steps, log_dir=self.output_folder)
+        self.save_callback = SaveModelCallback(save_rollout_skip=10, rollout_length=self.episode_max_steps, log_dir=self.output_folder)
         # Model
         if self.policy_type == 'PPO':
             # arguments passed to the network
