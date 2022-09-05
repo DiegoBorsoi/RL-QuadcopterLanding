@@ -6,7 +6,7 @@ worker_node:
     hyperparameter:
         lr: 0.0003
         gamma: 0.99
-    hidden_layers: [128,64]
+    hidden_layers: [64,64]
 
 tester_node:
     number:
