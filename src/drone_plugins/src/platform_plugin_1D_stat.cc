@@ -277,6 +277,10 @@ namespace gazebo_plugins
     std::uniform_real_distribution<float> fdistr(- max_rot, max_rot);
 
     target_roll = fdistr(gen);
+
+    // TODO: test, to be removed
+    // set always the same rotation
+    target_roll = (M_PI / 24);
   }
 
   void PlatformPluginPrivate::OnUpdate(const gazebo::common::UpdateInfo & _info)
