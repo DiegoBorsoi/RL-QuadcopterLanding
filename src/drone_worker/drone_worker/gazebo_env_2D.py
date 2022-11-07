@@ -34,11 +34,11 @@ class DroneEnv2D(gym.Env):
         # Define action and observation space
         # They must be gym.spaces objects
 
-        self.n_actions = 5
+        self.n_actions = [3, 3]
         self.n_states = 7
 
-        # actions: Left, Right, Down, Up, Wait
-        self.action_space = spaces.Discrete(self.n_actions)
+        #actions: [left, wait, right], [down, wait, up]
+        self.action_space = spaces.MultiDiscrete(self.n_actions)
 
         # bound parameters
         self.vertical_bound = 4.0       # bound from 0 to +val
@@ -340,13 +340,14 @@ class DroneEnv2D(gym.Env):
         a.angular.y = 0.0
         a.angular.z = 0.0
 
-        if action == 0:
+        if action[0] == 0:
             a.linear.y = 1.0
-        elif action == 1:
+        elif action[0] == 2:
             a.linear.y = -1.0
-        elif action == 2:
+
+        if action[1] == 0:
             a.linear.z = -1.0
-        elif action == 3:
+        elif action[1] == 2:
             a.linear.z = 1.0
 
         return a
