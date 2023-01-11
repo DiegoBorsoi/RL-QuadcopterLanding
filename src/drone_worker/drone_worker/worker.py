@@ -91,10 +91,11 @@ class Worker():
 
         print("Params: %s" % [self.episode_max_steps, self.episodes_number, self.lr, self.gamma, self.hidden_layers])
 
+        self.dimensions = dimensions
         # Environment
-        if dimensions == 1:
+        if self.dimensions == 1:
             self.env = DroneEnv1D(self.episode_max_steps)
-        elif dimensions == 2:
+        elif self.dimensions == 2:
             self.env = DroneEnv2D(self.episode_max_steps)
         else:
             self.env = DroneEnv(self.episode_max_steps)
@@ -180,7 +181,9 @@ def main():
         if load_net == 'True':
             worker.load(load_path)
 
-        worker.learn()
+        #worker.learn()
+        worker.test()
+        #worker.test_manual()
         print("-----FINITO!!!!!------------------------------")
 
     except KeyboardInterrupt:
