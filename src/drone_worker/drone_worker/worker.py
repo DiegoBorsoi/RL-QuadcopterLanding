@@ -181,9 +181,7 @@ def main():
         if load_net == 'True':
             worker.load(load_path)
 
-        #worker.learn()
-        worker.test()
-        #worker.test_manual()
+        worker.learn()
         print("-----FINITO!!!!!------------------------------")
 
     except KeyboardInterrupt:
