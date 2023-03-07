@@ -170,7 +170,6 @@ namespace gazebo_plugins
       impl->update_period = 0.0;
     }
     impl->last_update_time = impl->world->SimTime();
-    printf("update_period= %f ---------------------------------------------\n", impl->update_period);
 
     // Publish rate
     auto publish_rate = _sdf->Get<double>("publish_rate", 20.0).first;
