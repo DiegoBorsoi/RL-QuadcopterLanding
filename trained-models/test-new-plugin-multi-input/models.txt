@@ -1,0 +1,8 @@
+2D - type:=1 -- PPO_10 (cont 4 - best)
+2D - type:=1 -- PPO_9 (cont 3 - best)
+2D - type:=1 -- PPO_8 (cont 4 - best)
+2D - type:=1 -- PPO_7 (cont 4 - best - lr 1e-5)
+2D - type:=1 -- PPO_6 (cont 4 - best - lr 1e-4)
+2D - type:=1 -- PPO_5 (cont 4 - best)
+2D - type:=1 -- PPO_4 (cont 3 - best)
+2D - type:=0 -- PPO_3
