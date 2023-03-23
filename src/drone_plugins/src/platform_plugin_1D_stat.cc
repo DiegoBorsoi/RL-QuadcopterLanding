@@ -280,7 +280,7 @@ namespace gazebo_plugins
 
     // TODO: test, to be removed
     // set always the same rotation
-    target_roll = (M_PI / 24);
+    //target_roll = (M_PI / 24);
   }
 
   void PlatformPluginPrivate::OnUpdate(const gazebo::common::UpdateInfo & _info)
