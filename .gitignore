@@ -5,6 +5,8 @@ saves/
 tensorboard-test/
 tensorboard-data/
 
+saved-rollout/
+BC_train_saves/
+
 *.pyc
 
-nohup.log
