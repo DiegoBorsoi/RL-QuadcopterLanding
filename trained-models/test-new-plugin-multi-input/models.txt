@@ -1,3 +1,5 @@
+2D - type:=1 -- PPO_12 (cont 11 - best)
+2D - type:=1 -- PPO_11 (cont 10 - best)
 2D - type:=1 -- PPO_10 (cont 4 - best)
 2D - type:=1 -- PPO_9 (cont 3 - best)
 2D - type:=1 -- PPO_8 (cont 4 - best)
