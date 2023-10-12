@@ -109,7 +109,7 @@ class Worker():
         if self.policy_type == 'PPO':
             # arguments passed to the network
             policy_kwargs = dict(activation_fn=th.nn.Tanh,
-                                 net_arch=[dict(pi=self.hidden_layers, vf=self.hidden_layers)])
+                                 net_arch=dict(pi=self.hidden_layers, vf=self.hidden_layers))
 
             self.model = PPO("MlpPolicy", 
                              env = self.env,

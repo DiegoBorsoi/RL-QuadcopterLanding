@@ -247,7 +247,7 @@ namespace gazebo_plugins
     impl_->max_rot = (M_PI / 12);
     impl_->rot_steps = 20.0f;
 
-    impl_->rot_zero_margin = impl_->max_rot / 20;
+    impl_->rot_zero_margin = impl_->max_rot / 40;
 
     impl_->high_rot_vel = 1.0f;
 

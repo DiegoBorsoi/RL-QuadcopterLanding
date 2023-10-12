@@ -113,7 +113,7 @@ class DroneEnv2D(gym.Env):
         self.reset_flag = False
         self.platform_touch = False
         self.touch_roll_error = 0
-        self.platform_rot_margin = 0.07
+        self.platform_rot_margin = 0.08
 
         self.reward_multiplier = 10
         self.reward_penalty = 2 * self.run_max_steps

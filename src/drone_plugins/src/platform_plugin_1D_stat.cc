@@ -239,7 +239,7 @@ namespace gazebo_plugins
     impl_->max_rot = (M_PI / 12);
     impl_->rot_steps = 20.0f;
 
-    impl_->rot_zero_margin = impl_->max_rot / 20;
+    impl_->rot_zero_margin = impl_->max_rot / 40;
 
     impl_->high_rot_vel = 1.0f;
 
@@ -280,7 +280,7 @@ namespace gazebo_plugins
 
     // TODO: test, to be removed
     // set always the same rotation
-    //target_roll = (M_PI / 24);
+    target_roll = (M_PI / 24);
   }
 
   void PlatformPluginPrivate::OnUpdate(const gazebo::common::UpdateInfo & _info)
