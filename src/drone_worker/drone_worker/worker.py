@@ -5,6 +5,9 @@ import yaml
 import torch as th
 import numpy as np
 
+import rclpy
+from geometry_msgs.msg import Twist
+
 from drone_worker.gazebo_env_1D import DroneEnv1D
 from drone_worker.gazebo_env_2D import DroneEnv2D
 from drone_worker.gazebo_env import DroneEnv
@@ -13,6 +16,16 @@ from stable_baselines3 import PPO
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.utils import safe_mean
+
+from stable_baselines3.common.vec_env import DummyVecEnv
+
+import dataclasses
+from imitation.data import types
+from imitation.data import rollout
+from imitation.data.wrappers import RolloutInfoWrapper
+from imitation.algorithms import bc
+from imitation.util import logger as imit_logger
+from stable_baselines3.common.evaluation import evaluate_policy
 
 
 class SaveModelCallback(BaseCallback):
@@ -158,6 +171,181 @@ class Worker():
         else:
             print("ERROR: Invalid policy: %s" % self.policy_type)
 
+    '''
+    Callback for the manual input manager node
+    '''
+    def manual_input_callback(self, msg):
+        #self.manual_node.get_logger().info("Input received: x: %s, y: %s, z: %s" % (msg.linear.x, msg.linear.y, msg.linear.z))
+        self.last_manual_action = self.translate_action(msg.linear)
+
+    '''
+    Traslates the action from a Twist construct to the format used by the environment
+    '''
+    def translate_action(self, linear_action):
+        action = -1
+        x = linear_action.x
+        y = linear_action.y
+        z = linear_action.z
+
+        if self.dimensions == 1:
+            # actions: Down, Up, Wait
+            action = 2
+            if z == -1.0:
+                action = 0
+            elif z == 1.0:
+                action = 1
+
+        elif self.dimensions == 2:
+            #actions: [left, wait, right], [down, wait, up]
+            action = [1, 1]
+            if y == 1.0:
+                action[0] = 0
+            elif y == -1.0:
+                action[0] = 2
+
+            if z == -1.0:
+                action[1] = 0
+            elif z == 1.0:
+                action[1] = 2
+
+        else:
+            # Not managed
+            pass
+
+        return action
+
+    '''
+    Creates a collection of rollouts using a given network (loaded from load_path) and saves them on a given path
+    '''
+    def BC_create_rollout(self, ep_num, load_path, save_file_path):
+
+        self.load(load_path)
+
+        rng = np.random.default_rng(0)
+
+        rollouts = rollout.rollout(
+            self.model,
+            DummyVecEnv([lambda: RolloutInfoWrapper(self.env)]),
+            rollout.make_sample_until(min_timesteps=None, min_episodes=ep_num),
+            rng=rng,
+        )
+
+        types.save(save_file_path, rollouts)
+
+        return
+
+    '''
+    Function used for creating and saving rollouts using the manual input
+    '''
+    def BC_create_rollout_manual(self, ep_num, save_file_path):
+        episodes = ep_num
+
+        self.last_manual_action = self.translate_action(Twist().linear)
+
+        self.manual_node = rclpy.create_node("manual_input_receiver")
+        self.platform_subscriber = self.manual_node.create_subscription(Twist, '/manual_input', self.manual_input_callback, 1)
+
+        rng = np.random.default_rng(0)
+        
+        venv = DummyVecEnv([lambda: RolloutInfoWrapper(self.env)])
+        
+        # Collect rollout tuples.
+        rollouts = []
+        # accumulator for incomplete trajectories
+        trajectories_accum = rollout.TrajectoryAccumulator()
+        obs = venv.reset()
+        trajectories_accum.add_step(dict(obs=obs[0]), 0)
+
+        while episodes > 0:
+            rclpy.spin_once(self.manual_node)
+            a = self.last_manual_action
+            acts = np.array([a])
+            obs, rews, dones, infos = venv.step(acts)
+
+            new_trajs = trajectories_accum.add_steps_and_auto_finish(
+                acts,
+                obs,
+                rews,
+                dones,
+                infos,
+            )
+            rollouts.extend(new_trajs)
+
+            if dones[0]:
+                episodes -= 1
+
+        rng.shuffle(rollouts)
+
+        rollouts = [rollout.unwrap_traj(traj) for traj in rollouts]
+        rollouts = [dataclasses.replace(traj, infos=None) for traj in rollouts]
+
+        types.save(save_file_path, rollouts)
+
+        return
+
+    '''
+    Loads a collection of rollouts from a given path
+    '''
+    def BC_load_rollout(self, rollout_path):
+
+        loaded_rollouts = types.load(rollout_path)
+        
+        return loaded_rollouts
+
+    '''
+    Trains a network for a given number of epochs using imitation learning on a given collection of roolouts.
+    At the end of the training the neywork is saved on a given path
+    '''
+    def BC_train(self, rollouts, epochs, bc_trainer_path):
+        
+        transitions = rollout.flatten_trajectories(rollouts)
+
+        rng = np.random.default_rng(0)
+        
+        bc_trainer = bc.BC(
+            observation_space=self.env.observation_space,
+            action_space=self.env.action_space,
+            demonstrations=transitions,
+            rng=rng,
+            policy=self.model.policy,
+            custom_logger=imit_logger.configure("BC_train_saves", ["stdout", "log", "tensorboard"])
+        )
+
+        bc_trainer.train(n_epochs=epochs)
+        bc_trainer.save_policy(bc_trainer_path)
+
+        return
+
+    '''
+    Tests a network for a given numebr of episodes, printing the results
+    '''
+    def BC_test(self, test_episodes_num, bc_trainer_path):
+        bc_trained_policy = bc.reconstruct_policy(bc_trainer_path)
+
+        reward, _ = evaluate_policy(bc_trained_policy, self.env, test_episodes_num, return_episode_rewards = True)
+        print("BC trained agent reward:", reward)
+        print("BC trained agent reward max:", max(reward))
+        print("BC trained agent reward min:", min(reward))
+        print("BC trained agent reward avg:", np.average(reward))
+
+        c = 0
+        for a in reward:
+            if a > -1000:
+                c += 1
+        print("BC trained agent giusti (> -1000): " + str(c / len(reward) * 100) + "%")
+
+        return
+
+    '''
+    Load a rollout, trains a network using the loaded experience and test the newly created network
+    '''
+    def BC_load_train_test(self, rollout_path, epochs, test_episodes_num, bc_trainer_path):
+
+        roll = self.BC_load_rollout(rollout_path)
+        self.BC_train(roll, epochs, bc_trainer_path)
+        self.BC_test(test_episodes_num, bc_trainer_path)
+
+        return
 
 def main():
     output_folder = sys.argv[1]
@@ -181,7 +369,22 @@ def main():
         if load_net == 'True':
             worker.load(load_path)
 
+        ###
+        # Examples of possible calls
+        ###
+
         worker.learn()
+
+        #worker.BC_create_rollout_manual(2, "saved-rollout/saved-rollout-manual.npz")
+        
+        #worker.BC_create_rollout(400, load_path, "saved-rollout/saved-rollout.npz")
+
+        #worker.BC_load_train_test(
+        #    "saved-rollout/saved-rollout_dim-2_plat-1_n-200_PPO-12_tot.npz", 400,
+        #    "saved-rollout/bc_trainer_policy-PPO12_200-400.pt")
+
+        #worker.BC_test(400, "saved-rollout/bc_trainer_policy-PPO12_200-400.pt") # media: 77.0 | 400 -> 77.0 79.5 79.75 76.75 75.25 77.5 78.75 77.25 74.25 77.25 73.25 75.75 78.75
+
         print("-----FINITO!!!!!------------------------------")
 
     except KeyboardInterrupt:
